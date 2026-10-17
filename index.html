@@ -3,6 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script>
+    // Telefonda arayüz %85 ölçekte: sayfa daha geniş çizilip ekrana sığdırılır (Amar'daki yoğunluk)
+    (function () {
+      var UI_SCALE = 0.85, sw = Math.min(screen.width, screen.height);
+      if (sw >= 600) return;
+      var w = Math.round(sw / UI_SCALE);
+      document.querySelector('meta[name=viewport]').setAttribute('content',
+        'width=' + w + ', initial-scale=' + (sw / w).toFixed(4) + ', viewport-fit=cover');
+    })();
+  </script>
   <meta name="theme-color" content="#7b5cff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">

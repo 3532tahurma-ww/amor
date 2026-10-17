@@ -5,7 +5,7 @@
  * arka planda güncellenir (stale-while-revalidate). Fotoğraflar ilk görüldüklerinde saklanır.
  * Yeni sürüm yayınlarken VERSION'ı artır, eski önbellek silinir.
  */
-const VERSION = 'amor-v71';
+const VERSION = 'amor-v72';
 const CORE = [
   './', './index.html', './manifest.json', './css/style.css',
   './js/store.js', './js/data/photos.js', './js/data/pools.js', './js/data/archetypes.js', './js/data/intents.js', './js/data/males.js', './js/kume.js',
