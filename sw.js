@@ -5,7 +5,7 @@
  * arka planda güncellenir (stale-while-revalidate). Fotoğraflar ilk görüldüklerinde saklanır.
  * Yeni sürüm yayınlarken VERSION'ı artır, eski önbellek silinir.
  */
-const VERSION = 'amor-v72';
+const VERSION = 'amor-v73';
 const CORE = [
   './', './index.html', './manifest.json', './css/style.css',
   './js/store.js', './js/data/photos.js', './js/data/pools.js', './js/data/archetypes.js', './js/data/intents.js', './js/data/males.js', './js/kume.js',
@@ -44,6 +44,15 @@ self.addEventListener('fetch', e => {
       if (res.ok) cache.put(req, res.clone());
       return res;
     }));
+    return;
+  }
+
+  // Sayfanın kendisi: önce ağ (yeni sürüm ilk açılışta gelsin), ağ yoksa önbellek
+  if (req.mode === 'navigate' && url.origin === location.origin) {
+    e.respondWith(fetch(req).then(res => {
+      if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put('./index.html', copy)); }
+      return res;
+    }).catch(() => caches.match('./index.html')));
     return;
   }
 

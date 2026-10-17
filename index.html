@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <script>
-    // Telefonda arayüz %85 ölçekte: sayfa daha geniş çizilip ekrana sığdırılır (Amar'daki yoğunluk)
+    // Telefonda arayüz %80 ölçekte: sayfa daha geniş çizilip ekrana sığdırılır (Amar'daki yoğunluk)
     (function () {
-      var UI_SCALE = 0.85, sw = Math.min(screen.width, screen.height);
+      var UI_SCALE = 0.8, sw = Math.min(screen.width, screen.height);
       if (sw >= 600) return;
       var w = Math.round(sw / UI_SCALE);
       document.querySelector('meta[name=viewport]').setAttribute('content',
