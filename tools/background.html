@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amor · Arka plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!--
+  Arka plan izleyici (deneysel simülasyon): kadın karakterlerin, uygulamada görünmeyen erkek karakterlerle
+  sohbetleri, hediyeleri, aramaları ve erkeklerin harcadığı (sanal) coinler. diyalog-editoru.bat -> "Arka plan".
+  Veriyi tarayıcı deposundan okur: uygulama AYNI adreste açılmış olmalı (ör. http://localhost:8765/).
+  Uygulama verisini değiştirmez; sadece test hızını ('amor:bgSpeed') ve "bir tur" işaretini ('amor:bgKick') yazar,
+  açık olan uygulama bunları 2 sn içinde uygular (js/background.js). 4 sn'de bir yenilenir.
+-->
+<style>
+  :root { --bg: #f6f4fb; --card: #fff; --ink: #231f33; --mute: #7a7590; --line: #e6e2f0; --accent: #7b5cff; --soft: #efeaff; --pink: #ff3d8b; --blue: #2563eb; --ok: #1f9d6a; --warn: #e5484d; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 Nunito, system-ui, sans-serif; }
+  button, select { font: inherit; color: inherit; cursor: pointer; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--line); }
+  .bar { display: flex; align-items: center; gap: 12px; padding: 10px 18px; flex-wrap: wrap; }
+  .logo { font-weight: 800; font-size: 18px; } .logo span { color: var(--accent); } .logo small { color: var(--mute); font-weight: 700; font-size: 13px; margin-left: 6px; }
+  .grow { flex: 1; }
+  .btn { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 6px 12px; font-weight: 700; text-decoration: none; color: inherit; }
+  .btn:hover { border-color: var(--accent); }
+  select { border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; background: var(--card); }
+  #live { color: var(--mute); font-size: 12.5px; }
+  .speed { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; }
+  .speed.fast select { border-color: var(--pink); color: var(--pink); font-weight: 800; }
+  .tabs { display: flex; gap: 6px; padding: 0 18px 10px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--card); border-radius: 20px; padding: 5px 14px; font-weight: 700; }
+  .tab.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  main { padding: 16px 18px 60px; max-width: 1300px; margin: 0 auto; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+  .card h3 { margin: 0 0 10px; font-size: 15px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+  .stat b { display: block; font-size: 22px; font-weight: 800; } .stat small { color: var(--mute); font-weight: 700; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: middle; }
+  th { color: var(--mute); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; cursor: default; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  .who { display: flex; align-items: center; gap: 8px; }
+  .ava { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: none; background: var(--soft); display: grid; place-items: center; font-weight: 800; color: var(--accent); }
+  .ava.m { background: #dbeafe; color: var(--blue); }
+  .pill { display: inline-block; border-radius: 20px; padding: 1px 8px; font-size: 11.5px; font-weight: 800; background: var(--bg); }
+  .pill.on { background: #dcfce7; color: var(--ok); } .pill.ask { background: #fff4d6; color: #a16207; } .pill.gift { background: #ffe0ef; color: var(--pink); }
+  .pill.call { background: #dbeafe; color: var(--blue); } .pill.refuse { background: #fde2e2; color: var(--warn); }
+  .meter { display: inline-block; width: 70px; height: 7px; border-radius: 4px; background: var(--line); vertical-align: middle; overflow: hidden; margin-right: 6px; }
+  .meter i { display: block; height: 100%; background: linear-gradient(90deg, #ffb3d1, var(--pink)); }
+  .split { display: grid; grid-template-columns: 360px 1fr; gap: 14px; align-items: start; }
+  .list { max-height: calc(100vh - 170px); overflow: auto; padding: 6px; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 10px; cursor: pointer; }
+  .row:hover { background: var(--bg); } .row.on { background: var(--soft); }
+  .row > div { flex: 1; min-width: 0; }
+  .row b { display: block; } .row small { display: block; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .side { flex: none; text-align: right; font-size: 12px; color: var(--mute); }
+  .log { display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 290px); overflow: auto; padding: 4px; }
+  .msg { max-width: 75%; display: flex; flex-direction: column; }
+  .msg span { padding: 7px 12px; border-radius: 16px; font-weight: 600; }
+  .msg small { font-size: 11px; color: var(--mute); margin: 2px 6px 0; }
+  .msg.m { align-self: flex-start; } .msg.m span { background: #dbeafe; color: #1e3a8a; border-bottom-left-radius: 4px; }
+  .msg.f { align-self: flex-end; align-items: flex-end; } .msg.f span { background: var(--pink); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.sys { align-self: center; max-width: 90%; } .msg.sys span { background: #fff4d6; color: #7a5200; font-size: 12.5px; border-radius: 10px; }
+  .head2 { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .head2 .who b { font-size: 15px; } .muted { color: var(--mute); }
+  .empty { color: var(--mute); padding: 30px 10px; text-align: center; }
+  .gifts { display: flex; flex-wrap: wrap; gap: 4px; }
+  .spentbox { background: #ffe0ef; color: #9d174d; border-radius: 10px; padding: 7px 12px; margin-bottom: 8px; font-weight: 700; }
+  .pill.rel { background: #f3e8ff; color: #7e22ce; }
+  .gifts span { background: var(--bg); border-radius: 8px; padding: 1px 6px; font-size: 12.5px; }
+  .fatal { max-width: 620px; margin: 60px auto; }
+  @media (max-width: 900px) { .split, .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo">am<span>o</span>r <small>Arka plan (deneysel simülasyon)</small></div>
+    <div class="grow"></div>
+    <select id="acc" title="Hesap"></select>
+    <label class="speed" title="Arka plan simülasyonunun hızı (uygulama açıkken)">⏩
+      <select id="speed"><option value="1">1× gerçek</option><option value="10">10×</option><option value="60">60×</option><option value="300">300×</option></select></label>
+    <button class="btn" id="kick" title="Bütün sohbetler hemen bir tur ilerler, 3 yeni sohbet açılır">▶ Bir tur</button>
+    <span id="live"></span>
+    <a class="btn" href="../index.html" target="_blank">Uygulamayı aç ↗</a>
+    <a class="btn" href="dialog-editor.html">← Diyalog editörü</a>
+  </div>
+  <div class="tabs" id="tabs"></div>
+</header>
+<main id="main"></main>
+
+<script src="../js/data/photos.js"></script>
+<script src="../js/data/shop.js"></script>
+<script src="../js/data/archetypes.js"></script>
+<script src="../js/wish.js"></script>
+<script>
+(() => {
+  const A = window.Amor;
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const fmt = n => Number(n || 0).toLocaleString('tr-TR');
+  const read = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+  const time = ts => new Date(ts).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const ago = ts => { const d = (Date.now() - ts) / 60000; return d < 1 ? 'az önce' : d < 60 ? `${Math.floor(d)} dk` : d < 1440 ? `${Math.floor(d / 60)} sa` : `${Math.floor(d / 1440)} gün`; };
+  const gift = id => A.GIFTS.find(g => g.id === id);
+  // Coin -> TL (en küçük yükleme paketinin kuru; sadece gösterim)
+  const TL = A.RECHARGE_PACKS[0].price / A.RECHARGE_PACKS[0].coins;
+  const tl = n => '≈' + Math.round((n || 0) * TL).toLocaleString('tr-TR') + ' ₺';
+  const money = n => `${fmt(n)} coin <span class="muted">(${tl(n)})</span>`;
+  // Bir sohbette erkeğin harcadığı (eski kayıtlarda olaylardan hesaplanır)
+  const threadSpent = (D, t) => t.spent != null ? t.spent : D.events.filter(e => e.f === t.f && e.m === t.m && e.coins).reduce((a, e) => a + e.coins, 0);
+  const arch = id => (A.ARCHETYPES || []).find(a => a.id === id);
+
+  const TABS = [['sum', 'Özet'], ['threads', 'Sohbetler'], ['events', 'Etkileşimler'], ['males', 'Erkekler'], ['females', 'Kadınlar']];
+  let tab = new URLSearchParams(location.search).get('tab') || 'sum', sel = null, accId = null, lastRaw = '', evFilter = 'all';
+
+  function photo(c) {
+    const set = (A.PHOTO_SETS || []).find(s => s.id === c.setId);
+    if (!set) return null;
+    const file = [set.profile, ...set.photos].includes(c.profile) ? c.profile : set.profile;
+    return `../characters/${encodeURIComponent(set.id)}/${set.dir ?? 'photos/'}${encodeURIComponent(file)}`;
+  }
+  const fAva = c => { const p = c && photo(c); return p ? `<img class="ava" src="${esc(p)}" alt="">` : `<span class="ava">${esc((c && c.name || '?')[0])}</span>`; };
+  const mAva = m => `<span class="ava m">${esc((m && m.name || '?')[0])}</span>`;
+
+  function load() {
+    const accs = read('amor:accounts') || { list: [] };
+    const sel = $('#acc');
+    if (!accId || !accs.list.some(a => a.id === accId)) accId = accs.current || (accs.list[0] && accs.list[0].id);
+    sel.innerHTML = accs.list.map(a => `<option value="${a.id}" ${a.id === accId ? 'selected' : ''}>@${esc(a.username)}</option>`).join('');
+    sel.hidden = accs.list.length < 2;
+    return accId ? localStorage.getItem('amor:v2:' + accId) : null;
+  }
+
+  function render(force) {
+    const raw = load();
+    if (!force && raw === lastRaw) { $('#live').textContent = 'canlı · ' + new Date().toLocaleTimeString('tr-TR'); return; }
+    lastRaw = raw;
+    $('#live').textContent = 'canlı · ' + new Date().toLocaleTimeString('tr-TR');
+    $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="tab ${k === tab ? 'on' : ''}" data-tab="${k}">${n}</button>`).join('');
+    const S = raw ? JSON.parse(raw) : null;
+    if (!S || !S.bg) {
+      $('#main').innerHTML = `<div class="card fatal"><h3>Bu adreste arka plan verisi yok</h3>
+        <p>İzleyici, tarayıcı deposundaki uygulama verisini okur. Uygulamayı bu sayfayla <b>aynı adreste</b> aç
+        (<a href="../index.html" target="_blank">${esc(new URL('../', location.href).href)}</a>), bir hesapla giriş yap ve biraz bekle:
+        arka plan sohbetleri uygulama açıkken ilerler. Bu sayfa kendiliğinden yenilenir.</p>
+        <p class="muted">Not: farklı adres (GitHub Pages / telefon / başka port) farklı depo demektir.</p></div>`;
+      return;
+    }
+    const D = model(S);
+    const views = { sum: vSum, threads: vThreads, events: vEvents, males: vMales, females: vFemales };
+    const keep = $('.log') && $('.log').scrollTop, atBottom = $('.log') && $('.log').scrollHeight - $('.log').scrollTop - $('.log').clientHeight < 30;
+    $('#main').innerHTML = views[tab](D);
+    const log = $('.log');
+    if (log) log.scrollTop = atBottom || keep == null ? log.scrollHeight : keep;
+  }
+
+  function model(S) {
+    const bg = S.bg;
+    const F = Object.fromEntries((S.characters || []).map(c => [c.id, c]));
+    const M = Object.fromEntries((bg.males || []).map(m => [m.id, m]));
+    const threads = Object.values(bg.threads || {}).filter(t => F[t.f] && M[t.m]).sort((a, b) => b.last - a.last);
+    const events = (bg.events || []).filter(e => F[e.f] && M[e.m]);
+    const coll = bg.coll || {};
+    return { S, bg, F, M, threads, events, coll };
+  }
+
+  /* ---------- Özet ---------- */
+  function vSum(D) {
+    const { threads, events, M, F, coll, S } = D;
+    const males = Object.values(M);
+    const gifts = events.filter(e => e.type === 'gift'), calls = events.filter(e => e.type === 'call');
+    const asks = events.filter(e => e.type === 'ask'), refuse = events.filter(e => e.type === 'refuse');
+    const spent = males.reduce((a, m) => a + (m.spent || 0), 0);
+    const msgs = threads.reduce((a, t) => a + t.msgs.length, 0);
+    const callMin = males.reduce((a, m) => a + (m.callMin || 0), 0);
+    const collValue = id => Object.entries(coll[id] || {}).reduce((a, [g, n]) => a + ((gift(g) || {}).price || 0) * n, 0);
+    const topF = Object.values(F).map(c => ({ c, v: collValue(c.id) })).filter(x => x.v).sort((a, b) => b.v - a.v).slice(0, 8);
+    const topM = [...males].sort((a, b) => (b.spent || 0) - (a.spent || 0)).slice(0, 8);
+    const userSpent = (S.wallet && S.wallet.spent) || 0;
+    return `
+      <div class="stats">
+        ${[[males.length, 'erkek karakter'], [threads.length, 'sohbet'], [fmt(msgs), 'mesaj'], [gifts.length, 'hediye'], [calls.length + ' · ' + fmt(callMin) + ' dk', 'arama'],
+          [asks.length, 'istek'], [refuse.length, 'reddedilen istek'], [events.filter(e => e.type === 'rel').length, 'kurulan yakınlık'],
+          [fmt(spent), 'erkeklerin harcadığı coin · ' + tl(spent)], [fmt(userSpent), 'senin harcadığın coin · ' + tl(userSpent)]]
+          .map(([v, l]) => `<div class="stat"><b>${v}</b><small>${l}</small></div>`).join('')}
+      </div>
+      <div class="grid2">
+        <div class="card"><h3>En çok hediye alan kadınlar (erkeklerden)</h3>
+          ${topF.length ? `<table>${topF.map(x => `<tr><td><div class="who">${fAva(x.c)}<b>${esc(x.c.name)}</b></div></td><td class="num">${fmt(x.v)} coin</td></tr>`).join('')}</table>` : '<div class="empty">Henüz yok</div>'}</div>
+        <div class="card"><h3>En çok harcayan erkekler</h3>
+          ${topM.some(m => m.spent) ? `<table>${topM.filter(m => m.spent).map(m => `<tr><td><div class="who">${mAva(m)}<b>${esc(m.name)}</b><span class="muted">${esc(m.job)}</span></div></td><td class="num">${money(m.spent)}</td></tr>`).join('')}</table>` : '<div class="empty">Henüz yok</div>'}</div>
+      </div>
+      <div class="card"><h3>Son etkileşimler</h3>${evTable(D, events.slice(0, 12))}</div>`;
+  }
+
+  /* ---------- Sohbetler ---------- */
+  function vThreads(D) {
+    const { threads, F, M } = D;
+    if (!threads.length) return '<div class="card empty">Henüz arka plan sohbeti yok. Uygulama açıkken kendiliğinden başlar.</div>';
+    if (!sel || !threads.some(t => t.id === sel)) sel = threads[0].id;
+    const t = threads.find(x => x.id === sel), c = F[t.f], m = M[t.m];
+    const list = threads.map(x => {
+      const last = x.msgs[x.msgs.length - 1];
+      const who = last ? (last.from === 'f' ? F[x.f].name : last.from === 'm' ? M[x.m].name : '•') : '';
+      return `<div class="row ${x.id === sel ? 'on' : ''}" data-th="${x.id}">${fAva(F[x.f])}
+        <div><b>${esc(F[x.f].name)} ↔ ${esc(M[x.m].name)}</b><small>${last ? esc(who + ': ' + last.text) : ''}</small></div>
+        <div class="side">${ago(x.last)}<br>${x.msgs.length} msj${threadSpent(D, x) ? `<br><b style="color:var(--pink)">${fmt(threadSpent(D, x))} c</b>` : ''}</div></div>`;
+    }).join('');
+    return `<div class="split">
+      <div class="card list">${list}</div>
+      <div class="card">
+        <div class="head2">
+          <div class="who">${fAva(c)}<div><b>${esc(c.name)}</b><div class="muted">${esc((arch(c.archetype) || {}).label || c.archetype)} · hediye niyeti %${Math.round((c.giftWant ?? 0.5) * 100)} · istek tavanı ${fmt(A.Wish.ceiling(c))} coin</div></div></div>
+          <div class="who">${mAva(m)}<div><b>${esc(m.name)}, ${m.age}</b><div class="muted">${esc(m.job)} · ${esc(m.city)} · cömertlik %${Math.round((m.generous || 0) * 100)} · cesaret %${Math.round(m.bold * 100)}</div></div></div>
+        </div>
+        <div class="spentbox">💸 ${esc(m.name)} bu sohbette toplam <b>${fmt(threadSpent(D, t))} coin</b> harcadı · <b>${tl(threadSpent(D, t))}</b></div>
+        <div class="muted" style="margin-bottom:8px">${t.session + 1}. oturum · ısınma ${t.warm} · ${t.ask ? `<span class="pill ask">bekleyen istek: ${t.ask.type === 'gift' ? esc((gift(t.ask.gift) || {}).name || 'hediye') : 'arama'}</span>` : 'bekleyen istek yok'} · sıradaki tur ${t.next > Date.now() ? ago(Date.now() - (t.next - Date.now())) + ' sonra' : 'şimdi'}</div>
+        <div class="log">${t.msgs.map(x => `<div class="msg ${x.from}"><span>${esc(x.text)}</span>${x.from === 'sys' ? '' : `<small>${time(x.ts)}</small>`}</div>`).join('')}</div>
+      </div></div>`;
+  }
+
+  /* ---------- Etkileşimler ---------- */
+  const EV = { gift: ['gift', '🎁 Hediye'], call: ['call', '📞 Arama'], ask: ['ask', '🙏 İstek'], refuse: ['refuse', '✖ Reddedildi'], rel: ['rel', '💞 Yakınlık'], rellost: ['refuse', '💔 Yakınlığı kaptırdı'] };
+  const relTag = k => (A.RELATIONS[k] || {}).tag || k;
+  function evTable(D, list) {
+    const { F, M } = D;
+    if (!list.length) return '<div class="empty">Henüz etkileşim yok</div>';
+    return `<table><tr><th>Zaman</th><th>Tür</th><th>Kadın</th><th>Erkek</th><th>Ayrıntı</th><th class="num">Coin</th></tr>
+      ${list.map(e => {
+        const g = e.gift && gift(e.gift);
+        const what = e.type === 'gift' ? `${g ? g.e + ' ' + esc(g.name) : ''}${e.asked ? ' <span class="muted">(istedi)</span>' : ''}${e.where === 'room' ? ' <span class="muted">(sesli odada)</span>' : ''}`
+          : e.type === 'call' ? `${e.kind === 'video' ? 'Görüntülü' : 'Sesli'} · ${e.minutes} dk${e.asked ? ' <span class="muted">(istedi)</span>' : ''}`
+          : e.type === 'ask' ? `${e.what === 'call' ? 'arama istedi' : (g ? g.e + ' ' + esc(g.name) + ' istedi' : 'hediye istedi')} · ${e.where === 'call' ? 'aramada' : 'sohbette'}`
+          : e.type === 'rel' ? `${esc(relTag(e.rel))} oldular${g ? ' · ' + g.e + ' ' + esc(g.name) : ''}`
+          : e.type === 'rellost' ? `${esc(relTag(e.rel))} yakınlığını sana kaptırdı`
+          : `${e.what === 'call' ? 'arama' : (g ? esc(g.name) : 'hediye')} isteği geri çevrildi`;
+        return `<tr><td class="muted">${time(e.ts)}</td><td><span class="pill ${EV[e.type][0]}">${EV[e.type][1]}</span></td>
+          <td><div class="who">${fAva(F[e.f])}${esc(F[e.f].name)}</div></td><td><div class="who">${mAva(M[e.m])}${esc(M[e.m].name)}</div></td>
+          <td>${what}</td><td class="num">${e.coins ? money(e.coins) : ''}</td></tr>`;
+      }).join('')}</table>`;
+  }
+  function vEvents(D) {
+    const list = D.events.filter(e => evFilter === 'all' || e.type === evFilter);
+    return `<div class="card"><div class="tabs" style="padding:0 0 10px">
+        ${[['all', 'Hepsi'], ...Object.entries(EV).map(([k, v]) => [k, v[1]])].map(([k, n]) => `<button class="tab ${k === evFilter ? 'on' : ''}" data-ev="${k}">${n}</button>`).join('')}
+      </div>${evTable(D, list.slice(0, 200))}</div>`;
+  }
+
+  /* ---------- Erkekler ---------- */
+  function vMales(D) {
+    const { M, threads, F } = D;
+    const rows = Object.values(M).sort((a, b) => (b.spent || 0) - (a.spent || 0)).map(m => {
+      const ts = threads.filter(t => t.m === m.id);
+      return `<tr><td><div class="who">${mAva(m)}<div><b>${esc(m.name)}, ${m.age}</b><div class="muted">${esc(m.job)} · ${esc(m.city)} · sever: ${esc(m.like)}</div></div></div></td>
+        <td><span class="meter"><i style="width:${Math.round((m.generous || 0) * 100)}%"></i></span>%${Math.round((m.generous || 0) * 100)}</td>
+        <td><span class="meter"><i style="width:${Math.round(m.bold * 100)}%"></i></span>%${Math.round(m.bold * 100)}</td>
+        <td class="num">${m.gifts || 0}</td><td class="num">${fmt(m.callMin || 0)} dk</td><td class="num"><b>${fmt(m.spent || 0)}</b></td><td class="num">${tl(m.spent)}</td>
+        <td>${ts.map(t => esc(F[t.f].name)).join(', ') || '<span class="muted">—</span>'}</td></tr>`;
+    }).join('');
+    return `<div class="card"><table><tr><th>Erkek</th><th>Cömertlik</th><th>Cesaret</th><th class="num">Hediye</th><th class="num">Arama</th><th class="num">Harcadığı coin</th><th class="num">TL</th><th>Konuştuğu kadınlar</th></tr>${rows}</table></div>`;
+  }
+
+  // Cazibe seviyesi: aldığı hediyelerin toplam değeri (js/background.js charm ile aynı eşikler)
+  const charmLv = points => A.CHARM_LEVELS.filter(t => points >= t).length;
+
+  // Kadının yakınlıkları: erkeklerle (bg.rels) + seninle (relations)
+  function rels(D, fId) {
+    const out = Object.entries(D.bg.rels && D.bg.rels[fId] || {}).filter(([, m]) => D.M[m]).map(([k, m]) => `<span class="pill rel">${esc(relTag(k))}: ${esc(D.M[m].name)}</span>`);
+    const mine = (D.S.relations || {})[fId];
+    if (mine) out.unshift(`<span class="pill rel">${esc(relTag(mine))}: Sen</span>`);
+    return out.join(' ');
+  }
+
+  /* ---------- Kadınlar ---------- */
+  function vFemales(D) {
+    const { F, threads, coll, S, events } = D;
+    const now = Date.now();
+    const rows = Object.values(F).map(c => {
+      const others = coll[c.id] || {}, mine = (S.giftsReceived || {})[c.id] || {};
+      const val = o => Object.entries(o).reduce((a, [g, n]) => a + ((gift(g) || {}).price || 0) * n, 0);
+      const w = (S.wish || {})[c.id];
+      const wishTxt = w && !w.done && !w.missed && w.until > now ? `<span class="pill ask">${esc((gift(w.gift) || {}).name || 'hediye')} istiyor</span>` : w && w.missed ? '<span class="pill refuse">isteği karşılanmadı</span>' : w && w.done ? '<span class="pill gift">isteği karşılandı</span>' : '';
+      const ts = threads.filter(t => t.f === c.id);
+      const asks = events.filter(e => e.f === c.id && e.type === 'ask').length;
+      const top = Object.entries({ ...others }).map(([g, n]) => ({ g: gift(g), n })).filter(x => x.g).sort((a, b) => b.g.price - a.g.price).slice(0, 6);
+      return { c, v: val(others), row: `<tr><td><div class="who">${fAva(c)}<div><b>${esc(c.name)}</b><div class="muted">${esc((arch(c.archetype) || {}).label || c.archetype)}</div></div></div></td>
+        <td>${(() => { const ag = (A.AGENCIES || []).find(a => a.id === c.agency); return ag ? `${ag.e} ${esc(ag.name)}` : '<span class="muted">bağımsız</span>'; })()}</td>
+        <td><span class="meter"><i style="width:${Math.round((c.giftWant ?? 0.5) * 100)}%"></i></span>%${Math.round((c.giftWant ?? 0.5) * 100)}</td>
+        <td class="num">×${c.giftTaste ?? 1}</td><td class="num"><b>${fmt(A.Wish.ceiling(c))}</b></td>
+        <td class="num">${asks}</td><td>${wishTxt}</td>
+        <td class="num">${fmt(val(others))}</td><td class="num">${fmt(val(mine))}</td>
+        <td class="num"><b>✨ Lv.${charmLv(val(others) + val(mine))}</b><br>${money(val(others) + val(mine))}</td>
+        <td><div class="gifts">${top.map(x => `<span>${x.g.e} x${x.n}</span>`).join('')}</div></td>
+        <td>${rels(D, c.id) || '<span class="muted">—</span>'}</td>
+        <td>${ts.length ? ts.length + ' erkek' : '<span class="muted">—</span>'}</td></tr>` };
+    }).sort((a, b) => b.v - a.v).map(x => x.row).join('');
+    return `<div class="card"><table><tr><th>Kadın</th><th>Ajans</th><th>Hediye niyeti</th><th class="num">Zevk</th><th class="num">İstek tavanı</th><th class="num">İstek</th><th>Senden isteği</th><th class="num">Erkeklerden (coin)</th><th class="num">Senden (coin)</th><th class="num">Cazibe · toplam kazanç</th><th>Koleksiyon (erkeklerden)</th><th>Yakınlıklar</th><th>Sohbet</th></tr>${rows}</table></div>`;
+  }
+
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-tab]'); if (t) { tab = t.dataset.tab; render(true); return; }
+    const th = e.target.closest('[data-th]'); if (th) { sel = th.dataset.th; render(true); return; }
+    const ev = e.target.closest('[data-ev]'); if (ev) { evFilter = ev.dataset.ev; render(true); }
+  });
+  $('#acc').onchange = e => { accId = e.target.value; render(true); };
+  // Test hızı ve "bir tur": açık olan uygulama 2 sn içinde uygular
+  const setLs = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* yok say */ } };
+  const showSpeed = () => { const v = localStorage.getItem('amor:bgSpeed') || '1'; $('#speed').value = v; $('.speed').classList.toggle('fast', v !== '1'); };
+  $('#speed').onchange = e => { setLs('amor:bgSpeed', e.target.value); showSpeed(); };
+  $('#kick').onclick = () => { setLs('amor:bgKick', String(Date.now())); $('#live').textContent = 'tur istendi… (uygulama açık olmalı)'; };
+  showSpeed();
+  render(true);
+  setInterval(render, 4000);
+})();
+</script>
+</body>
+</html>

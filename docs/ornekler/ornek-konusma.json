@@ -1,0 +1,64 @@
+{
+  "format": "amor-konusma",
+  "version": 1,
+  "clusters": [
+    {
+      "id": "x_muzik",
+      "name": "Müzik sohbeti",
+      "words": ["şarkı", "müzik", "playlist", "albüm", "konser", "spotify", "dinliyorum", "ne dinliyorsun"],
+      "before": "how_are_you",
+      "effect": { "valence": 0.08, "arousal": 0.05, "aff": 1 },
+      "lines": {
+        "*": {
+          "normal": ["ooo ne dinliyorsun?", "müziksiz yaşayamam ya|sen ne tür seversin?"],
+          "neg": ["şu an müziğe bile kafam yok", "hmm, sonra konuşalım mı?"],
+          "sad": ["hüzünlü bir şey dinliyorum ben de…"],
+          "low": ["kulaklık takıp uzanasım var"]
+        },
+        "nese": {
+          "normal": ["AYY müzik!!|ne dinliyorsun söyle hemen", "bana da öner bir şarkı{h}"],
+          "close": ["sana bir playlist yapsam mı?|bizim şarkımız olsun"]
+        },
+        "soguk": {
+          "normal": ["Ne tür müzik?", "Ben genelde enstrümantal dinlerim."]
+        },
+        "flortoz": {
+          "normal": ["müzik zevkin iyiyse puanın artar{laugh}", "bana bir şarkı at, seni tanıyayım"],
+          "close": ["bu şarkıyı dinleyince aklıma sen geliyorsun"]
+        }
+      },
+      "function": {
+        "outs": [
+          { "id": "konser", "name": "Konser", "lines": ["konser mi?? kimin?|ben de gelmek isterdim", "konserler ayrı bir dünya ya"] },
+          { "id": "oneri", "name": "Şarkı önerisi", "lines": ["bir şarkı öner bakalım{h}", "bana da at, dinleyeyim"] },
+          { "id": "huzun", "name": "Hüzünlü şarkı", "lines": ["neden hüzünlü şarkılar?|bir şey mi oldu?", "bazen iyi gelir öyle şarkılar"] }
+        ],
+        "ins": [
+          { "kw": "konser", "out": "konser" },
+          { "kw": "bilet + konser", "out": "konser" },
+          { "kw": ["şarkı", "öner"], "out": "oneri" },
+          { "kw": "playlist + paylaş", "out": "oneri" },
+          { "kw": "şarkı + hüzünlü", "out": "huzun" },
+          { "kw": "şarkı + ağla", "out": "huzun" }
+        ]
+      }
+    },
+    {
+      "id": "thanks",
+      "lines": {
+        "olgun": {
+          "normal": ["Rica ederim, ne demek.", "Her zaman{h}."]
+        }
+      },
+      "function": {
+        "outs": [
+          { "id": "yardim", "name": "Yardım için teşekkür", "lines": ["ne demek, işe yaradıysa ne mutlu", "yardım edebildiysem ne güzel"] }
+        ],
+        "ins": [
+          { "kw": "teşekkür + yardım", "out": "yardim" },
+          { "kw": "sağ ol + yardım", "out": "yardim" }
+        ]
+      }
+    }
+  ]
+}

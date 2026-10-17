@@ -1,0 +1,60 @@
+{
+  "format": "amor-kume",
+  "version": 1,
+  "scenarios": [
+    {
+      "name": "Konu: İş / mülakat",
+      "live": false,
+      "states": [
+        { "id": "S", "kind": "S", "name": "S", "desc": "Başlangıç", "icon": "👋", "start": true,
+          "emojis": ["👋"], "stay": ["hmm anlat bakalım", "başka ne var ne yok?"], "x": 90, "y": 220 },
+        { "id": "X", "kind": "X", "name": "X", "desc": "İş konusu açıldı", "icon": "💼",
+          "emojis": ["💼", "👀"], "stay": ["eee, iş nasıl?", "anlat biraz daha"], "x": 300, "y": 220,
+          "stayRules": [ { "kw": ["patron", "müdür"], "lines": ["patron ne dedi?", "patronlar hep böyle ya"] } ] },
+        { "id": "X1a", "kind": "X1", "name": "X-1a", "desc": "Mülakata hazırlanıyor", "icon": "📝",
+          "emojis": ["📝", "💪"], "stay": ["kolay gelsin", "ne soruyorlar genelde?"], "x": 540, "y": 80 },
+        { "id": "X1b", "kind": "X1", "name": "X-1b", "desc": "Mülakat stresi", "icon": "😰",
+          "emojis": ["🫂"], "stay": ["derin nefes al", "sen hazırsın bence"], "x": 540, "y": 360 },
+        { "id": "X2a", "kind": "X2", "name": "X-2a", "desc": "İşe alındı", "icon": "🎉",
+          "emojis": ["🎉", "✨"], "stay": ["ne zaman başlıyorsun?", "çok sevindim"], "x": 800, "y": 80 },
+        { "id": "X2b", "kind": "X2", "name": "X-2b", "desc": "Olumsuz döndüler", "icon": "💔",
+          "emojis": ["🤍"], "emojiChance": 0.3, "stay": ["canını sıkma", "daha iyisi gelecek"], "x": 800, "y": 360 }
+      ],
+      "edges": [
+        { "id": "close", "name": "Kapatma", "from": ["X", "X1a", "X1b", "X2a", "X2b"], "to": "S", "need": "kw",
+          "kw": ["neyse", "boşver", "konuyu değiştir", "geçelim"], "lines": ["tamam kapattık|başka ne var?"] },
+        { "id": "how", "name": "Nasılsın", "from": ["S"], "to": "S", "need": "how", "kw": [], "lines": [], "use": ["how_are_you"] },
+        { "id": "greet", "name": "Selam", "from": ["S"], "to": "S", "need": "greet", "kw": [], "lines": [], "use": ["greet"] },
+        { "id": "open", "name": "İş konusu", "from": ["S"], "to": "X", "need": "kw",
+          "kw": ["mülakat", "iş görüşmesi", "iş başvurusu", "başvurdum", "cv", "işe alım", "staj"],
+          "lines": ["aa {w} mı? anlat", "ciddi mi? hangi şirket?"], "desc": "iş arama konusu açıldı" },
+        { "id": "prep", "name": "Hazırlık", "from": ["X"], "to": "X1a", "need": "kw",
+          "kw": ["hazırlanıyorum", "çalışıyorum", "araştırıyorum", "prova"],
+          "lines": ["aferin, iyi hazırlan", "kolay gelsin{h}|neler çalışıyorsun?"] },
+        { "id": "stress", "name": "Stres", "from": ["X", "X1a"], "to": "X1b", "need": "kw",
+          "kw": ["stres", "gerginim", "korkuyorum", "heyecan", "panik"],
+          "lines": ["sakin ol{h}, çok normal", "heyecanlanman güzel aslında|demek ki önemsiyorsun"] },
+        { "id": "calm", "name": "Sakinleşme", "from": ["X1b"], "to": "X1a", "need": "kw",
+          "kw": ["sakinleştim", "toparladım", "kendime geldim"], "lines": ["işte böyle, devam"] },
+        { "id": "hired", "name": "Alındı", "from": ["X1a", "X1b"], "to": "X2a", "need": "kw",
+          "kw": ["alındım", "kabul edildim", "teklif geldi", "işe girdim", "olumlu döndüler"],
+          "lines": ["tebrikler!!|biliyordum alınacağını", "helal olsun sana{h}"] },
+        { "id": "rejected", "name": "Olmadı", "from": ["X1a", "X1b"], "to": "X2b", "need": "kw",
+          "kw": ["alınmadım", "reddedildim", "olumsuz döndüler", "olmadı", "dönmediler"],
+          "lines": ["üzüldüm ama onların kaybı", "boşver, daha iyisi gelecek"] },
+        { "id": "praise", "name": "Övgü", "from": ["X2a"], "to": "", "need": "kw",
+          "kw": ["başardım", "gurur"], "lines": ["gurur duydum seninle", "aferin sana!"] },
+        { "id": "satisfy", "name": "Tatmin", "from": ["X2a"], "to": "S", "need": "kw",
+          "kw": ["rahatladım", "oh be", "mutluyum"], "lines": ["hak ettin bu rahatlığı"] },
+        { "id": "comfort", "name": "Teselli", "from": ["X2b"], "to": "S", "need": "kw",
+          "kw": ["sağ ol", "haklısın", "iyi geldi"], "lines": ["hep buradayım"] },
+        { "id": "retry", "name": "Yeniden başvuru", "from": ["X2b"], "to": "X1a", "need": "kw",
+          "kw": ["yine başvurdum", "başka yere başvurdum", "yeniden"], "lines": ["bu sefer olacak, eminim"] }
+      ],
+      "samples": [
+        ["İşe alındı", ["selam", "yarın mülakatım var", "biraz hazırlanıyorum", "çok gerginim ya", "toparladım", "teklif geldi!", "başardım işte", "oh be rahatladım"]],
+        ["Olmadı", ["iş başvurusu yaptım", "çalışıyorum sorulara", "reddedildim", "sağ ol"]]
+      ]
+    }
+  ]
+}
