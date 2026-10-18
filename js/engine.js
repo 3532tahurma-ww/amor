@@ -44,7 +44,7 @@ Amor.Engine = (() => {
     ORDER = COMPILED.map(x => x.intent);
   }
 
-  /* ---------- Özel diyalog (diyalog-editoru.bat -> js/data/custom-dialog.js) ----------
+  /* ---------- Özel diyalog (bot-editoru.bat -> Diyalog -> js/data/custom-dialog.js) ----------
    * intents[id] = { words, before, effect }  -> kelime listesini değiştirir / yeni niyet ekler
    * lines[arketip]["niyet" | "niyet_close" | "neg:niyet" | "sad:niyet" | "low:niyet"] = cümleler
    * kume = Küme sistemi (senaryolar, konuşma kümesi fonksiyonları, kişilik havuzları) → js/kume.js okur */
@@ -338,29 +338,46 @@ Amor.Engine = (() => {
     const text = messages.join(' ');
     const kt = Amor.Kume ? Amor.Kume.turn(c, text) : null;
     let kumeState = null;
+    // Bot kuralları (js/data/bot-rules.js, bot editörü): kelimeleri mesajda sırayla geçen en özel kural.
+    // Kelimeli kural cevabı verir (küme senaryosundan sonra, niyet cümlelerinden önce); kelimesiz "yedek" kurallar
+    // anlaşılmayan mesajın cümlelerine katılır.
+    const br = Amor.Bot && Amor.BOT_RULES ? Amor.Bot.best(Amor.BOT_RULES, text, Amor.Bot.asChar(c)) : null;
+    const botLine = x => String(x).split('||').join('|').replace(/\{sen\}/gi, S().user.name || 'sen').replace(/\{ben\}/gi, c.name.split(' ')[0]);
 
     const badMood = grp === 'neg' || grp === 'sad' || grp === 'low';
+    let src; // cevabın geldiği yer (editördeki simülatör gösterir)
     if (repeated && Math.random() < 0.7) {
       line = pick(c, Amor.SHARED.repeat);
+      src = 'tekrar eden mesaja tepki';
     } else if (kt && (!badMood || kt.refused)) {
+      src = kt.refused ? 'küme: sevmediği kümeyi reddetti' : 'küme: ' + (kt.src || 'senaryo');
       // Küme cevabı, karakterin önceki sorusuna verilen cevap tepkisinden de önce gelir (senaryo akışı bölünmesin)
       line = pick(c, kt.pool);
       if (kt.love && kt.love.length && Math.random() < 0.7) line += '|' + pick(c, kt.love); // sevdiği küme
       if (kt.word) extra.x = kt.word; // {w}: bağlantıyı tetikleyen kelime
       line = line.replace(/\{w\}/g, '{x}');
       kumeState = kt.state;
+    } else if (br && !br.fallback) {
+      line = botLine(pickRaw(br.rule.reply.filter(x => String(x).trim())));
+      src = 'bot kuralı';
     } else if (best.intent === 'react_q') {
       line = best.qLine;
+      src = 'kendi sorusuna verdiğin cevaba tepki';
     } else if (best.intent === 'ask_call' && Amor.Call) {
       line = Amor.Call.permit(c, messages.join(' '));
+      src = 'arama izni';
     } else if (best.intent === 'ask_memory') {
       line = Amor.Memory.summary(c).join('|');
+      src = 'hafıza özeti';
     } else if (best.intent.startsWith('react_')) {
       line = pick(c, Amor.SHARED[best.intent]);
+      src = 'öğrendiği bilgiye tepki';
     } else if (interest < 0.3 && casual.includes(best.intent)) {
       // sıkıldı: tek kelimelik cevaplar
       line = pick(c, Amor.SHARED.bored);
+      src = 'ilgisi düşük: sıkılmış kısa cevap';
     } else if (badMood) {
+      src = 'ruh hali cümleleri (' + grp + ')';
       const bank = c.mood[grp] || {};
       const pool = bank[best.intent] || (best.intent === 'insult' ? c.lines.insult : null) || bank.any || Amor.SHARED[grp];
       line = pick(c, pool);
@@ -372,12 +389,14 @@ Amor.Engine = (() => {
     } else {
       // Konuşma kümesinin fonksiyonu: mesaj bir girdiye uyarsa o çıktının cümleleri ("iyi akşamlar" → akşam selamı)
       const fn = Amor.Kume && Amor.Kume.intentPool(best.intent, text);
-      line = pick(c, fn || linePool(c, best.intent));
+      const fbRules = best.intent === 'fallback' && br && br.fallback ? br.rule.reply.filter(x => String(x).trim()).map(botLine) : [];
+      line = pick(c, fn || [...linePool(c, best.intent), ...fbRules]);
+      src = fn ? 'konuşma kümesi fonksiyonu' : fbRules.includes(line) ? 'bot yedek cevabı' : 'niyet cümleleri';
       // Cümledeki fiili onaylayarak cevap ver
       rf = !repeated && reflectLine(c, messages[messages.length - 1], best.intent);
       if (rf) {
-        if (best.intent === 'fallback') { if (Math.random() < 0.85) line = rf; }
-        else if (Math.random() < 0.55) line = rf + '|' + line;
+        if (best.intent === 'fallback') { if (Math.random() < 0.85) { line = rf; src = 'fiili yansıtma'; } }
+        else if (Math.random() < 0.55) { line = rf + '|' + line; src += ' + fiili yansıtma'; }
       }
       if (best.greet && best.intent !== 'greet' && c.lines.greet) {
         line = pick(c, c.lines.greet).split('|')[0] + '|' + line;
@@ -439,14 +458,23 @@ Amor.Engine = (() => {
       }
     }
 
-    return finish(c, parts, kumeState ? { ...mods, kume: kumeState } : mods, grp, { askId }, best.intent);
+    const trace = { intent: best.intent, word: best.word || null, src,
+      bot: br && (src === 'bot kuralı' || src === 'bot yedek cevabı') ? { id: br.rule.id, name: br.rule.name, when: br.rule.when, fallback: br.fallback } : null, kume: kumeState ? kumeState.name : null, refused: !!(kt && kt.refused),
+      facts: newFacts.map(f => f.type), interest, mood: mods.label, busy: plan.state === 'busy', wish: !!wishLine, sweet: sweetened };
+    return finish(c, parts, kumeState ? { ...mods, kume: kumeState } : mods, grp, { askId, trace }, best.intent);
   }
 
   function finish(c, rawParts, mods, grp, flags, intent) {
     // Kişilik havuzu: ifade tercihleri / yazım alışkanlıkları ("iyiyim > iyidir ya"), yazım tarzından önce
     const P = Amor.Kume && Amor.Kume.persona(c.archetype);
     if (P) rawParts = rawParts.map(p => Amor.Kume.habits(P, p));
-    const parts = rawParts.map((p, i) => stylize(c, p, mods, grp, i === rawParts.length - 1));
+    let parts = rawParts.map((p, i) => stylize(c, p, mods, grp, i === rawParts.length - 1));
+    // 🪄 Otomatik ekler (bot editörü): karakterin mesajındaki kelimelere göre başına/sonuna ek ya da ayrı balon
+    if (Amor.Bot && Amor.BOT_RULES && parts.length) {
+      const d = Amor.Bot.decorate(Amor.BOT_RULES, c, { parts, delays: parts.map(() => 0) }, { sen: S().user.name || 'sen', ben: c.name.split(' ')[0] });
+      parts = d.parts;
+      if (d.addons && d.addons.length) flags.addons = d.addons.map(a => ({ mode: a.mode, id: a.rule.id, name: a.rule.name, text: a.text }));
+    }
     S().expect[c.id] = flags.askId ? 'q:' + flags.askId : expectFrom(rawParts, intent);
     delete flags.askId;
     const delays = parts.map((p, i) => {

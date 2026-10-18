@@ -1,4 +1,4 @@
-/* diyalog-editoru.bat ile duzenlenir (tools/dialog-editor.html) */
+/* bot-editoru.bat > Diyalog ile duzenlenir (tools/dialog-editor.html) */
 window.Amor = window.Amor || {};
 Amor.CUSTOM_DIALOG = {
  "intents": {},
@@ -22,6 +22,7 @@ Amor.CUSTOM_DIALOG = {
    "bulusma": {
     "id": "bulusma",
     "name": "Örnek: buluşma ayarlama",
+    "live": false,
     "states": [
      {
       "id": "sohbet",
@@ -39,9 +40,9 @@ Amor.CUSTOM_DIALOG = {
        "hmm anlat",
        "başka ne var?"
       ],
+      "stayRules": [],
       "x": 100,
       "y": 200,
-      "noTopic": true,
       "start": true
      },
      {
@@ -60,9 +61,9 @@ Amor.CUSTOM_DIALOG = {
        "eee? nereye?",
        "cevabını bekliyorum"
       ],
+      "stayRules": [],
       "x": 330,
       "y": 200,
-      "noTopic": false,
       "start": false
      },
      {
@@ -80,9 +81,30 @@ Amor.CUSTOM_DIALOG = {
        "hadi ama",
        "çok düşünme"
       ],
+      "stayRules": [],
       "x": 560,
-      "y": 90,
-      "noTopic": false,
+      "y": 80,
+      "start": false
+     },
+     {
+      "id": "gun",
+      "kind": "X1",
+      "name": "Gün seçimi",
+      "desc": "Kabul edildi, gün aranıyor",
+      "icon": "🗓️",
+      "color": "#d98a00",
+      "emojis": [
+       "🗓️",
+       "😊"
+      ],
+      "emojiChance": 0.5,
+      "stay": [
+       "ne zaman müsaitsin?",
+       "hangi gün olsun?"
+      ],
+      "stayRules": [],
+      "x": 560,
+      "y": 320,
       "start": false
      },
      {
@@ -101,9 +123,9 @@ Amor.CUSTOM_DIALOG = {
        "görüşmeye az kaldı",
        "ne giysem acaba"
       ],
-      "x": 790,
-      "y": 200,
-      "noTopic": false,
+      "stayRules": [],
+      "x": 800,
+      "y": 80,
       "start": false
      },
      {
@@ -121,9 +143,9 @@ Amor.CUSTOM_DIALOG = {
        "…",
        "tamam"
       ],
-      "x": 560,
-      "y": 330,
-      "noTopic": false,
+      "stayRules": [],
+      "x": 800,
+      "y": 320,
       "start": false
      }
     ],
@@ -138,10 +160,10 @@ Amor.CUSTOM_DIALOG = {
       "to": "sohbet",
       "need": "greet",
       "kw": [],
-      "lines": [],
-      "tl": "",
-      "yield": false,
-      "use": []
+      "lines": [
+       "selam{h}",
+       "heyy"
+      ]
      },
      {
       "id": "teklif",
@@ -163,9 +185,7 @@ Amor.CUSTOM_DIALOG = {
       "lines": [
        "aa ciddi misin?|nereye gidelim?",
        "olabilir aslında… ne zaman?"
-      ],
-      "tl": "",
-      "yield": false
+      ]
      },
      {
       "id": "kararsiz",
@@ -186,17 +206,36 @@ Amor.CUSTOM_DIALOG = {
       "lines": [
        "hmm ama sen teklif ettin ya|hadi karar ver",
        "düşün düşün, ben buradayım"
+      ]
+     },
+     {
+      "id": "kabul",
+      "name": "Kabul",
+      "desc": "",
+      "from": [
+       "teklif"
       ],
-      "tl": "",
-      "yield": false
+      "to": "gun",
+      "need": "kw",
+      "kw": [
+       "olur",
+       "tamam",
+       "neden olmasın",
+       "gelirim",
+       "hadi"
+      ],
+      "lines": [
+       "yaşasın!|ne zaman olsun?",
+       "süper, gün söyle"
+      ]
      },
      {
       "id": "plan",
       "name": "Plan",
       "desc": "",
       "from": [
-       "teklif",
-       "kararsiz"
+       "kararsiz",
+       "gun"
       ],
       "to": "plan",
       "need": "kw",
@@ -211,17 +250,15 @@ Amor.CUSTOM_DIALOG = {
       "lines": [
        "tamamdır, not aldım",
        "süper, sabırsızlanıyorum"
-      ],
-      "tl": "",
-      "yield": false
+      ]
      },
      {
       "id": "iptal",
       "name": "İptal",
       "desc": "",
       "from": [
-       "teklif",
        "kararsiz",
+       "gun",
        "plan"
       ],
       "to": "iptal",
@@ -236,9 +273,7 @@ Amor.CUSTOM_DIALOG = {
       "lines": [
        "hıı… peki",
        "anladım, başka zaman artık"
-      ],
-      "tl": "",
-      "yield": false
+      ]
      },
      {
       "id": "baris",
@@ -256,9 +291,7 @@ Amor.CUSTOM_DIALOG = {
       ],
       "lines": [
        "hmm, ikna etmeye çalış bakalım"
-      ],
-      "tl": "",
-      "yield": false
+      ]
      },
      {
       "id": "kapat",
@@ -277,9 +310,7 @@ Amor.CUSTOM_DIALOG = {
       ],
       "lines": [
        "peki, ne anlatıyordun?"
-      ],
-      "tl": "",
-      "yield": false
+      ]
      }
     ],
     "samples": [
@@ -297,1298 +328,25 @@ Amor.CUSTOM_DIALOG = {
       "İptal ve barış",
       [
        "dışarı çıkalım mı",
+       "olur, gelirim",
        "erteleyelim ya gelemem",
        "şaka şaka yine de gel",
+       "tamam gelirim",
        "yarın saat 8 de"
-      ]
-     ]
-    ],
-    "live": true
-   },
-   "okul": {
-    "id": "okul",
-    "name": "Konu: Okul / sınav",
-    "live": true,
-    "states": [
-     {
-      "id": "S",
-      "kind": "S",
-      "name": "S",
-      "desc": "Başlangıç",
-      "icon": "👋",
-      "color": "#8b87a0",
-      "emojis": [
-       "👋"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "hmm anlat bakalım",
-       "okul nasıl gidiyor?"
-      ],
-      "stayRules": [],
-      "x": 90,
-      "y": 220,
-      "start": true
-     },
-     {
-      "id": "X",
-      "kind": "X",
-      "name": "X",
-      "desc": "Okul konusu açıldı",
-      "icon": "📚",
-      "color": "#7b5cff",
-      "emojis": [
-       "📚",
-       "✏️"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "eee, okul nasıl?",
-       "anlat bakalım"
-      ],
-      "stayRules": [
-       {
-        "kw": [
-         "hoca",
-         "öğretmen"
-        ],
-        "lines": [
-         "hocalar hep böyle ya",
-         "hoca ne dedi?"
-        ],
-        "use": []
-       }
-      ],
-      "x": 300,
-      "y": 220,
-      "start": false
-     },
-     {
-      "id": "X1a",
-      "kind": "X1",
-      "name": "X-1a",
-      "desc": "Ders çalışıyor",
-      "icon": "✏️",
-      "color": "#d98a00",
-      "emojis": [
-       "✏️",
-       "💪"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "kolay gelsin",
-       "hangi derse çalışıyorsun?"
-      ],
-      "stayRules": [],
-      "x": 540,
-      "y": 80,
-      "start": false
-     },
-     {
-      "id": "X1b",
-      "kind": "X1",
-      "name": "X-1b",
-      "desc": "Sınav stresi",
-      "icon": "😰",
-      "color": "#d98a00",
-      "emojis": [
-       "🫂"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "derin nefes al",
-       "yapacaksın, eminim"
-      ],
-      "stayRules": [],
-      "x": 540,
-      "y": 360,
-      "start": false
-     },
-     {
-      "id": "X2a",
-      "kind": "X2",
-      "name": "X-2a",
-      "desc": "Geçti / iyi not",
-      "icon": "🎓",
-      "color": "#1f9d6a",
-      "emojis": [
-       "🎉",
-       "🎓"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "başka ne var ne yok?",
-       "iyi ki halloldu"
-      ],
-      "stayRules": [],
-      "x": 800,
-      "y": 80,
-      "start": false
-     },
-     {
-      "id": "X2b",
-      "kind": "X2",
-      "name": "X-2b",
-      "desc": "Kaldı / kötü not",
-      "icon": "📉",
-      "color": "#1f9d6a",
-      "emojis": [
-       "🤍"
-      ],
-      "emojiChance": 0.3,
-      "stay": [
-       "canını sıkma",
-       "olur böyle şeyler"
-      ],
-      "stayRules": [],
-      "x": 800,
-      "y": 360,
-      "start": false
-     }
-    ],
-    "edges": [
-     {
-      "id": "close",
-      "name": "Kapatma",
-      "desc": "konu yarıda bırakılır",
-      "from": [
-       "X",
-       "X1a",
-       "X1b",
-       "X2a",
-       "X2b"
-      ],
-      "to": "S",
-      "need": "kw",
-      "kw": [
-       "neyse",
-       "boşver",
-       "konuyu değiştir",
-       "geçelim"
-      ],
-      "lines": [
-       "tamam, okulu kapattık|başka ne var?"
-      ]
-     },
-     {
-      "id": "how",
-      "name": "Nasılsın",
-      "desc": "cevap «Nasılsın» konuşma kümesinden",
-      "from": [
-       "S"
-      ],
-      "to": "S",
-      "need": "how",
-      "kw": [],
-      "lines": [],
-      "use": [
-       "how_are_you"
-      ]
-     },
-     {
-      "id": "greet",
-      "name": "Selam",
-      "desc": "cevap «Selamlaşma» konuşma kümesinden",
-      "from": [
-       "S"
-      ],
-      "to": "S",
-      "need": "greet",
-      "kw": [],
-      "lines": [],
-      "use": [
-       "greet"
-      ]
-     },
-     {
-      "id": "open",
-      "name": "Okul konusu",
-      "desc": "mesajda okul kelimesi geçti",
-      "from": [
-       "S"
-      ],
-      "to": "X",
-      "need": "kw",
-      "kw": [
-       "okul",
-       "ders",
-       "sınav",
-       "vize",
-       "final",
-       "quiz",
-       "ödev",
-       "hoca",
-       "üniversite",
-       "kampüs",
-       "lise",
-       "sınıf",
-       "dönem"
-      ],
-      "lines": [
-       "aa okul mu? anlat",
-       "{w} mı? nasıl gidiyor?"
-      ]
-     },
-     {
-      "id": "study",
-      "name": "Çalışma",
-      "desc": "ders çalışma süreci başlar",
-      "from": [
-       "X"
-      ],
-      "to": "X1a",
-      "need": "kw",
-      "kw": [
-       "çalışıyorum",
-       "çalışmaya başladım",
-       "ödev yapıyorum",
-       "tekrar ediyorum",
-       "hazırlanıyorum",
-       "kütüphane"
-      ],
-      "lines": [
-       "kolay gelsin, hangi ders?",
-       "aferin, çalışkan seni"
-      ]
-     },
-     {
-      "id": "stress",
-      "name": "Stres",
-      "desc": "sınav kaygısı",
-      "from": [
-       "X",
-       "X1a"
-      ],
-      "to": "X1b",
-      "need": "kw",
-      "kw": [
-       "stres",
-       "korkuyorum",
-       "heyecan",
-       "gerginim",
-       "yetişmeyecek",
-       "panik"
-      ],
-      "lines": [
-       "sakin ol{h}, yetişir",
-       "çok normal stres yapman|ama sen hazırsın"
-      ]
-     },
-     {
-      "id": "calm",
-      "name": "Sakinleşme",
-      "desc": "stres geçti, çalışmaya dönüş",
-      "from": [
-       "X1b"
-      ],
-      "to": "X1a",
-      "need": "kw",
-      "kw": [
-       "sakinleştim",
-       "toparladım",
-       "kendime geldim"
-      ],
-      "lines": [
-       "işte böyle, devam"
-      ]
-     },
-     {
-      "id": "pass",
-      "name": "Geçti",
-      "desc": "iyi sonuç",
-      "from": [
-       "X1a",
-       "X1b"
-      ],
-      "to": "X2a",
-      "need": "kw",
-      "kw": [
-       "geçtim",
-       "yüksek aldım",
-       "iyi geçti",
-       "tam puan"
-      ],
-      "lines": [
-       "tebrikler!!|biliyordum yapacağını",
-       "helal olsun sana"
-      ]
-     },
-     {
-      "id": "fail",
-      "name": "Kaldı",
-      "desc": "kötü sonuç",
-      "from": [
-       "X1a",
-       "X1b"
-      ],
-      "to": "X2b",
-      "need": "kw",
-      "kw": [
-       "kaldım",
-       "düşük aldım",
-       "kötü geçti",
-       "berbat geçti"
-      ],
-      "lines": [
-       "üzüldüm ama telafisi var",
-       "bir dahakine{h}, boşver"
-      ]
-     },
-     {
-      "id": "praise",
-      "name": "Övgü",
-      "desc": "övünür → karakter över",
-      "from": [
-       "X2a"
-      ],
-      "to": "",
-      "need": "kw",
-      "kw": [
-       "başardım",
-       "gurur"
-      ],
-      "lines": [
-       "aferin sana!",
-       "gurur duydum seninle"
-      ]
-     },
-     {
-      "id": "satisfy",
-      "name": "Tatmin",
-      "desc": "konu tatminle kapanır",
-      "from": [
-       "X2a"
-      ],
-      "to": "S",
-      "need": "kw",
-      "kw": [
-       "rahatladım",
-       "oh be",
-       "mutluyum"
-      ],
-      "lines": [
-       "hak ettin bu rahatlığı"
-      ]
-     },
-     {
-      "id": "comfort",
-      "name": "Teselli",
-      "desc": "teselli kabul edildi",
-      "from": [
-       "X2b"
-      ],
-      "to": "S",
-      "need": "kw",
-      "kw": [
-       "sağ ol",
-       "haklısın",
-       "telafi ederim"
-      ],
-      "lines": [
-       "hep buradayım"
-      ]
-     },
-     {
-      "id": "retry",
-      "name": "Yeniden çalışma",
-      "desc": "telafi süreci",
-      "from": [
-       "X2b"
-      ],
-      "to": "X1a",
-      "need": "kw",
-      "kw": [
-       "tekrar çalışacağım",
-       "bütünlemeye çalışıyorum",
-       "yeniden"
-      ],
-      "lines": [
-       "bu sefer olacak, eminim"
-      ]
-     }
-    ],
-    "samples": [
-     [
-      "İyi sonuç",
-      [
-       "selam",
-       "yarın sınavım var",
-       "kütüphanede çalışıyorum",
-       "çok stres oldum ya",
-       "toparladım",
-       "geçtim!",
-       "başardım işte",
-       "oh be rahatladım"
-      ]
-     ],
-     [
-      "Kötü sonuç",
-      [
-       "okul berbat",
-       "ödev yapıyorum",
-       "kötü geçti",
-       "sağ ol"
-      ]
-     ],
-     [
-      "Nasılsın",
-      [
-       "selam",
-       "nasılsın?"
-      ]
-     ]
-    ]
-   },
-   "futbol": {
-    "id": "futbol",
-    "name": "Konu: Futbol",
-    "live": true,
-    "states": [
-     {
-      "id": "S",
-      "kind": "S",
-      "name": "S",
-      "desc": "Başlangıç",
-      "icon": "👋",
-      "color": "#8b87a0",
-      "emojis": [
-       "👋"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "hmm anlat bakalım",
-       "bugün ne yaptın?"
-      ],
-      "stayRules": [],
-      "x": 90,
-      "y": 220,
-      "start": true
-     },
-     {
-      "id": "X",
-      "kind": "X",
-      "name": "X",
-      "desc": "Maç konusu açıldı",
-      "icon": "⚽",
-      "color": "#7b5cff",
-      "emojis": [
-       "⚽"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "hangi takımlısın sen?",
-       "maç ne zaman?"
-      ],
-      "stayRules": [
-       {
-        "kw": [
-         "hakem"
-        ],
-        "lines": [
-         "hakemler hep böyle ya",
-         "hakem yine ne yaptı?"
-        ],
-        "use": []
-       }
-      ],
-      "x": 300,
-      "y": 220,
-      "start": false
-     },
-     {
-      "id": "X1a",
-      "kind": "X1",
-      "name": "X-1a",
-      "desc": "Maç izleniyor",
-      "icon": "📺",
-      "color": "#d98a00",
-      "emojis": [
-       "📺",
-       "🍿"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "kimin önde?",
-       "nasıl gidiyor maç?"
-      ],
-      "stayRules": [],
-      "x": 540,
-      "y": 80,
-      "start": false
-     },
-     {
-      "id": "X1b",
-      "kind": "X1",
-      "name": "X-1b",
-      "desc": "Zor maç",
-      "icon": "😬",
-      "color": "#d98a00",
-      "emojis": [
-       "😬"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "dayanın!",
-       "daha bitmedi"
-      ],
-      "stayRules": [],
-      "x": 540,
-      "y": 360,
-      "start": false
-     },
-     {
-      "id": "X2a",
-      "kind": "X2",
-      "name": "X-2a",
-      "desc": "Kazandık",
-      "icon": "🏆",
-      "color": "#1f9d6a",
-      "emojis": [
-       "🏆",
-       "🎉"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "güzel maçtı",
-       "bu akşam keyifler yerinde"
-      ],
-      "stayRules": [],
-      "x": 800,
-      "y": 80,
-      "start": false
-     },
-     {
-      "id": "X2b",
-      "kind": "X2",
-      "name": "X-2b",
-      "desc": "Kaybettik",
-      "icon": "😞",
-      "color": "#1f9d6a",
-      "emojis": [
-       "🤍"
-      ],
-      "emojiChance": 0.3,
-      "stay": [
-       "olur böyle",
-       "bir sonraki maça bak"
-      ],
-      "stayRules": [],
-      "x": 800,
-      "y": 360,
-      "start": false
-     }
-    ],
-    "edges": [
-     {
-      "id": "close",
-      "name": "Kapatma",
-      "desc": "konu yarıda bırakılır",
-      "from": [
-       "X",
-       "X1a",
-       "X1b",
-       "X2a",
-       "X2b"
-      ],
-      "to": "S",
-      "need": "kw",
-      "kw": [
-       "neyse",
-       "boşver",
-       "konuyu değiştir",
-       "geçelim"
-      ],
-      "lines": [
-       "tamam, maçı bırakalım|başka ne var?"
-      ]
-     },
-     {
-      "id": "how",
-      "name": "Nasılsın",
-      "desc": "cevap «Nasılsın» konuşma kümesinden",
-      "from": [
-       "S"
-      ],
-      "to": "S",
-      "need": "how",
-      "kw": [],
-      "lines": [],
-      "use": [
-       "how_are_you"
-      ]
-     },
-     {
-      "id": "greet",
-      "name": "Selam",
-      "desc": "cevap «Selamlaşma» konuşma kümesinden",
-      "from": [
-       "S"
-      ],
-      "to": "S",
-      "need": "greet",
-      "kw": [],
-      "lines": [],
-      "use": [
-       "greet"
-      ]
-     },
-     {
-      "id": "open",
-      "name": "Futbol konusu",
-      "desc": "mesajda futbol kelimesi geçti",
-      "from": [
-       "S"
-      ],
-      "to": "X",
-      "need": "kw",
-      "kw": [
-       "maç",
-       "futbol",
-       "gol",
-       "derbi",
-       "lig",
-       "galatasaray",
-       "fenerbahçe",
-       "beşiktaş",
-       "trabzonspor",
-       "cimbom",
-       "fener",
-       "taraftar",
-       "stadyum",
-       "şampiyon",
-       "penaltı",
-       "transfer"
-      ],
-      "lines": [
-       "maç mı var? hangi takım?",
-       "{w} mı? anlat bakalım"
-      ]
-     },
-     {
-      "id": "watch",
-      "name": "İzleme",
-      "desc": "maç başladı",
-      "from": [
-       "X"
-      ],
-      "to": "X1a",
-      "need": "kw",
-      "kw": [
-       "izliyorum",
-       "başladı",
-       "devre",
-       "canlı"
-      ],
-      "lines": [
-       "kimin önde?",
-       "keyifli seyirler"
-      ]
-     },
-     {
-      "id": "tense",
-      "name": "Zorlanma",
-      "desc": "maç kötü gidiyor",
-      "from": [
-       "X",
-       "X1a"
-      ],
-      "to": "X1b",
-      "need": "kw",
-      "kw": [
-       "gol yedik",
-       "gerideyiz",
-       "geriye düştük",
-       "kırmızı kart",
-       "sakatlandı"
-      ],
-      "lines": [
-       "eyvah, dayanın!",
-       "daha bitmedi, umut var"
-      ]
-     },
-     {
-      "id": "comeback",
-      "name": "Toparlanma",
-      "desc": "skor döndü",
-      "from": [
-       "X1b"
-      ],
-      "to": "X1a",
-      "need": "kw",
-      "kw": [
-       "gol attık",
-       "eşitledik",
-       "toparladık"
-      ],
-      "lines": [
-       "işte bu!!",
-       "hadi bir gol daha"
-      ]
-     },
-     {
-      "id": "win",
-      "name": "Kazanma",
-      "desc": "maç kazanıldı",
-      "from": [
-       "X1a",
-       "X1b"
-      ],
-      "to": "X2a",
-      "need": "kw",
-      "kw": [
-       "kazandık",
-       "galibiz",
-       "yendik"
-      ],
-      "lines": [
-       "tebrikler!!",
-       "oley, helal olsun"
-      ]
-     },
-     {
-      "id": "lose",
-      "name": "Kaybetme",
-      "desc": "maç kaybedildi",
-      "from": [
-       "X1a",
-       "X1b"
-      ],
-      "to": "X2b",
-      "need": "kw",
-      "kw": [
-       "kaybettik",
-       "yenildik",
-       "berabere bitti",
-       "elendik"
-      ],
-      "lines": [
-       "üzüldüm ya",
-       "boş ver, rövanşı var"
-      ]
-     },
-     {
-      "id": "party",
-      "name": "Kutlama",
-      "desc": "kazanma sevinci",
-      "from": [
-       "X2a"
-      ],
-      "to": "",
-      "need": "kw",
-      "kw": [
-       "kutluyoruz",
-       "bayram",
-       "harikaydı"
-      ],
-      "lines": [
-       "kutlayın bakalım!",
-       "bu akşam uyku yok o zaman"
-      ]
-     },
-     {
-      "id": "satisfy",
-      "name": "Tatmin",
-      "desc": "konu tatminle kapanır",
-      "from": [
-       "X2a"
-      ],
-      "to": "S",
-      "need": "kw",
-      "kw": [
-       "mutluyum",
-       "keyfim yerinde",
-       "oh be"
-      ],
-      "lines": [
-       "keyfin hep yerinde olsun"
-      ]
-     },
-     {
-      "id": "comfort",
-      "name": "Teselli",
-      "desc": "teselli kabul edildi",
-      "from": [
-       "X2b"
-      ],
-      "to": "S",
-      "need": "kw",
-      "kw": [
-       "sağ ol",
-       "haklısın",
-       "bir dahaki"
-      ],
-      "lines": [
-       "hep buradayım"
-      ]
-     },
-     {
-      "id": "rematch",
-      "name": "Rövanş",
-      "desc": "yeni maç",
-      "from": [
-       "X2b"
-      ],
-      "to": "X1a",
-      "need": "kw",
-      "kw": [
-       "rövanş",
-       "yine oynuyoruz",
-       "bir sonraki maç"
-      ],
-      "lines": [
-       "rövanşta alırsınız"
-      ]
-     }
-    ],
-    "samples": [
-     [
-      "Kazanma",
-      [
-       "selam",
-       "akşam fenerbahçe maçı var",
-       "maçı izliyorum",
-       "gol yedik ya",
-       "eşitledik!",
-       "kazandık!!",
-       "kutluyoruz",
-       "mutluyum"
-      ]
-     ],
-     [
-      "Kaybetme",
-      [
-       "maç var bugün",
-       "başladı",
-       "kaybettik",
-       "sağ ol"
-      ]
-     ]
-    ]
-   },
-   "scmv31drtj4kl": {
-    "id": "scmv31drtj4kl",
-    "name": "Konu: Spor salonu / diyet",
-    "live": true,
-    "states": [
-     {
-      "id": "S",
-      "kind": "S",
-      "name": "S",
-      "desc": "Başlangıç",
-      "icon": "👋",
-      "color": "#8b87a0",
-      "emojis": [
-       "👋"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "neler yapıyorsun görüşmeyeli?",
-       "başka ne var ne yok?"
-      ],
-      "stayRules": [],
-      "x": 90,
-      "y": 220,
-      "start": true,
-      "stayUse": []
-     },
-     {
-      "id": "X",
-      "kind": "X",
-      "name": "X",
-      "desc": "Spor/Diyet konusu açıldı",
-      "icon": "🏋️",
-      "color": "#7b5cff",
-      "emojis": [
-       "💪",
-       "👀"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "spor nasıl gidiyor?",
-       "anlat bakalım hedefleri"
-      ],
-      "stayRules": [
-       {
-        "kw": [
-         "protein",
-         "toz"
-        ],
-        "lines": [
-         "protein tozu falan kullanıyor musun?",
-         "beslenmene dikkat et ama"
-        ],
-        "use": []
-       }
-      ],
-      "x": 300,
-      "y": 220,
-      "start": false,
-      "stayUse": []
-     },
-     {
-      "id": "X1a",
-      "kind": "X1",
-      "name": "X-1a",
-      "desc": "Antrenman/Diyet sürecinde",
-      "icon": "🏃",
-      "color": "#d98a00",
-      "emojis": [
-       "🔥",
-       "💪"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "böyle devam",
-       "ter atıyorsun ne güzel"
-      ],
-      "stayRules": [],
-      "x": 540,
-      "y": 80,
-      "start": false,
-      "stayUse": []
-     },
-     {
-      "id": "X1b",
-      "kind": "X1",
-      "name": "X-1b",
-      "desc": "Zorlanıyor",
-      "icon": "😫",
-      "color": "#d98a00",
-      "emojis": [
-       "🫂"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "dayan biraz",
-       "ilk başlarda zor olur"
-      ],
-      "stayRules": [],
-      "x": 540,
-      "y": 360,
-      "start": false,
-      "stayUse": []
-     },
-     {
-      "id": "X2a",
-      "kind": "X2",
-      "name": "X-2a",
-      "desc": "Hedefe ulaştı",
-      "icon": "🏆",
-      "color": "#1f9d6a",
-      "emojis": [
-       "🎉",
-       "😎"
-      ],
-      "emojiChance": 0.5,
-      "stay": [
-       "darısı başıma",
-       "kutlamak lazım bunu"
-      ],
-      "stayRules": [],
-      "x": 800,
-      "y": 80,
-      "start": false,
-      "stayUse": []
-     },
-     {
-      "id": "X2b",
-      "kind": "X2",
-      "name": "X-2b",
-      "desc": "Bıraktı/Bozdu",
-      "icon": "🍔",
-      "color": "#1f9d6a",
-      "emojis": [
-       "😅"
-      ],
-      "emojiChance": 0.4,
-      "stay": [
-       "arada olur öyle",
-       "kendini çok sıkma zaten"
-      ],
-      "stayRules": [],
-      "x": 800,
-      "y": 360,
-      "start": false,
-      "stayUse": []
-     }
-    ],
-    "edges": [
-     {
-      "id": "close",
-      "name": "Kapatma",
-      "desc": "",
-      "from": [
-       "X",
-       "X1a",
-       "X1b",
-       "X2a",
-       "X2b"
-      ],
-      "to": "S",
-      "need": "kw",
-      "kw": [
-       "neyse",
-       "boşver",
-       "konuyu değiştir",
-       "geçelim",
-       "kapatalım"
-      ],
-      "lines": [
-       "tamam kapattık konuyu|başka neler yaptın?"
-      ],
-      "use": []
-     },
-     {
-      "id": "how",
-      "name": "Nasılsın",
-      "desc": "",
-      "from": [
-       "S"
-      ],
-      "to": "S",
-      "need": "how",
-      "kw": [],
-      "lines": [],
-      "use": [
-       "how_are_you"
-      ]
-     },
-     {
-      "id": "greet",
-      "name": "Selam",
-      "desc": "",
-      "from": [
-       "S"
-      ],
-      "to": "S",
-      "need": "greet",
-      "kw": [],
-      "lines": [],
-      "use": [
-       "greet"
-      ]
-     },
-     {
-      "id": "open",
-      "name": "Spor konusu",
-      "desc": "spor veya diyet konusu açıldı",
-      "from": [
-       "S"
-      ],
-      "to": "X",
-      "need": "kw",
-      "kw": [
-       "spora başladım",
-       "diyete",
-       "spor salonu",
-       "fitness",
-       "kilo vermek",
-       "kilo almam",
-       "salona yazıldım"
-      ],
-      "lines": [
-       "aa cidden mi?|çok iyi fikir",
-       "hadi bakalım, hedefin ne?"
-      ],
-      "use": []
-     },
-     {
-      "id": "doing_well",
-      "name": "İyi gidiyor",
-      "desc": "",
-      "from": [
-       "X",
-       "X1b"
-      ],
-      "to": "X1a",
-      "need": "kw",
-      "kw": [
-       "ağırlık",
-       "kardiyo",
-       "yürüdüm",
-       "salondayım",
-       "sağlıklı besleniyorum",
-       "dikkat ediyorum",
-       "salona gittim"
-      ],
-      "lines": [
-       "harikasın, aynen devam",
-       "helal olsun sana{h}|vazgeçmek yok"
-      ],
-      "use": []
-     },
-     {
-      "id": "struggling",
-      "name": "Zorlanma",
-      "desc": "",
-      "from": [
-       "X",
-       "X1a"
-      ],
-      "to": "X1b",
-      "need": "kw",
-      "kw": [
-       "yoruldum",
-       "kaslarım ağrıyor",
-       "açım",
-       "tatlı krizi",
-       "hamlamışım",
-       "zorlanıyorum",
-       "bıktım"
-      ],
-      "lines": [
-       "kolay değil tabii{h}",
-       "başlangıçta öyle olur|sonra alışırsın"
-      ],
-      "use": []
-     },
-     {
-      "id": "success",
-      "name": "Başardı",
-      "desc": "",
-      "from": [
-       "X1a",
-       "X1b"
-      ],
-      "to": "X2a",
-      "need": "kw",
-      "kw": [
-       "kilo verdim",
-       "inceldim",
-       "kas yaptım",
-       "hedefime ulaştım",
-       "fit oldum",
-       "gelişme var"
-      ],
-      "lines": [
-       "tebrikler!!|emeklerinin karşılığını almışsın",
-       "vay be, gurur duydum"
-      ],
-      "use": []
-     },
-     {
-      "id": "fail",
-      "name": "Bozdu",
-      "desc": "",
-      "from": [
-       "X1a",
-       "X1b"
-      ],
-      "to": "X2b",
-      "need": "kw",
-      "kw": [
-       "diyeti bozdum",
-       "bıraktım",
-       "pes ettim",
-       "salonu bıraktım",
-       "pizza yedim",
-       "tatlı yedim",
-       "üşendim"
-      ],
-      "lines": [
-       "sağlık olsun, canından kıymetli değil ya",
-       "neyse bir kereden bir şey olmaz|dengelemek önemli"
-      ],
-      "use": []
-     },
-     {
-      "id": "satisfy",
-      "name": "Tatmin",
-      "desc": "",
-      "from": [
-       "X2a"
-      ],
-      "to": "S",
-      "need": "kw",
-      "kw": [
-       "çok mutluyum",
-       "kendimi iyi hissediyorum",
-       "hafifledim",
-       "harika hissediyorum"
-      ],
-      "lines": [
-       "senin adına çok sevindim"
-      ],
-      "use": []
-     },
-     {
-      "id": "comfort",
-      "name": "Teselli",
-      "desc": "",
-      "from": [
-       "X2b"
-      ],
-      "to": "S",
-      "need": "kw",
-      "kw": [
-       "sağ ol",
-       "haklısın",
-       "sağlık olsun",
-       "boşverdim"
-      ],
-      "lines": [
-       "aynen öyle, keyfine bak"
-      ],
-      "use": []
-     },
-     {
-      "id": "retry",
-      "name": "Tekrar başlama",
-      "desc": "",
-      "from": [
-       "X2b"
-      ],
-      "to": "X1a",
-      "need": "kw",
-      "kw": [
-       "tekrar başlayacağım",
-       "yarın devam",
-       "pazartesi",
-       "yeniden başlıyorum",
-       "dönüyorum"
-      ],
-      "lines": [
-       "işte bu motivasyonu seviyorum",
-       "hadi göreyim seni"
-      ],
-      "use": []
-     }
-    ],
-    "samples": [
-     [
-      "Hedefe ulaşma",
-      [
-       "selam",
-       "spora başladım",
-       "kardiyo yapıyorum her gün",
-       "ama kaslarım ağrıyor yoruldum",
-       "yine de kilo verdim",
-       "kendimi iyi hissediyorum"
-      ]
-     ],
-     [
-      "Diyeti bozma",
-      [
-       "nasılsın",
-       "diyete başladım",
-       "çok açım ya zorlanıyorum",
-       "dayanamayıp tatlı yedim diyeti bozdum",
-       "haklısın boşverdim"
       ]
      ]
     ]
    }
   },
   "order": [
-   "futbol",
-   "okul",
-   "bulusma",
-   "scmv31drtj4kl"
+   "bulusma"
   ],
   "removed": [
+   "okul",
+   "futbol",
    "kume"
   ],
-  "active": "futbol",
+  "active": "bulusma",
   "persona": {
    "nese": {
     "habits": [
@@ -1603,14 +361,10 @@ Amor.CUSTOM_DIALOG = {
     ],
     "max": 3,
     "likes": [
+     "futbol:X2a",
      "okul:X2a"
     ],
-    "dislikes": [
-     "futbol:X2b",
-     "futbol:X2a",
-     "futbol:X1b"
-    ],
-    "emojis": []
+    "dislikes": []
    },
    "soguk": {
     "habits": [
@@ -1813,48 +567,7 @@ Amor.CUSTOM_DIALOG = {
       "out": "samimi"
      }
     ]
-   },
-   "question": {
-    "outs": [],
-    "ins": []
-   },
-   "fallback": {
-    "outs": [],
-    "ins": []
-   },
-   "tell_name": {
-    "outs": [],
-    "ins": []
-   },
-   "opener": {
-    "outs": [],
-    "ins": []
-   },
-   "any": {
-    "outs": [],
-    "ins": []
-   },
-   "love": {
-    "outs": [],
-    "ins": []
-   },
-   "refuse": {
-    "outs": [],
-    "ins": []
-   },
-   "insult": {
-    "outs": [],
-    "ins": []
-   },
-   "night": {
-    "outs": [],
-    "ins": []
-   },
-   "morning": {
-    "outs": [],
-    "ins": []
    }
-  },
-  "useTopic": true
+  }
  }
 };

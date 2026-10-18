@@ -2,7 +2,7 @@
  * Amor - Arka plan sohbetleri (deneysel simülasyon)
  * -------------------------------------------------
  * Kadın karakterler, uygulamada görünmeyen erkek karakterlerle (js/data/males.js) kendi aralarında mesajlaşır.
- * app.js tick() her turda Background.tick() çağırır. İzlemek için: diyalog-editoru.bat -> "Arka plan"
+ * app.js tick() her turda Background.tick() çağırır. İzlemek için: bot-editoru.bat -> Diyalog -> "Arka plan"
  * (tools/background.html; aynı adreste açılan uygulamanın verisini okur).
  *
  * Sohbet oturumlar halinde ilerler: erkek yazar, kadın cevap verir; turlar birkaç dakika arayla gelir.

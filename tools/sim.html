@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Amor · simülatör (görünmez)</title>
+</head>
+<body>
+<!--
+  Bot editörünün 🧪 Dene sekmesi bu sayfayı görünmez bir çerçevede açar. Uygulamanın gerçek motor dosyaları
+  (bot kuralları + ekler, niyetler, küme sistemi, kişilik havuzları, ruh hali, ilgi, hafıza) burada çalışır;
+  editördeki kaydedilmemiş veriler Sim.setData ile uygulanır. Kayıt yalıtılmıştır: localStorage yerine hafızada
+  tutulur, gerçek hesaplara ve sohbetlere dokunmaz.
+-->
+<script>
+  (() => {
+    const mem = new Map();
+    const ls = {
+      getItem: k => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)), removeItem: k => mem.delete(k),
+      clear: () => mem.clear(), key: i => [...mem.keys()][i] ?? null, get length() { return mem.size; }
+    };
+    Object.defineProperty(window, 'localStorage', { value: ls, configurable: true });
+  })();
+</script>
+<script src="../js/store.js"></script>
+<script src="../js/data/photos.js"></script>
+<script src="../js/data/pools.js"></script>
+<script src="../js/data/archetypes.js"></script>
+<script src="../js/data/intents.js"></script>
+<script src="../js/data/males.js"></script>
+<script src="../js/data/shop.js"></script>
+<script src="../js/data/questions.js"></script>
+<script src="../js/data/memory-data.js"></script>
+<script src="../js/data/reflect.js"></script>
+<script src="../js/schedule.js"></script>
+<script src="../js/mood.js"></script>
+<script src="../js/memory.js"></script>
+<script src="../js/interest.js"></script>
+<script src="../js/nlu.js"></script>
+<script src="../js/reflect.js"></script>
+<script src="../js/engine.js"></script>
+<script src="../js/kume.js"></script>
+<script src="../js/generator.js"></script>
+<script src="../js/wallet.js"></script>
+<script src="../js/wish.js"></script>
+<script src="../js/bot.js"></script>
+<script>
+window.Sim = (() => {
+  const A = Amor, S = () => A.Store.state;
+  const clone = o => JSON.parse(JSON.stringify(o));
+  // custom-dialog.js yüklenmedi: motorun varsayılanları; her setData'da bunlardan başlanır
+  const P = { intents: clone(A.INTENTS), effects: clone(A.INTENT_EFFECTS), arch: clone(A.ARCHETYPES) };
+  let ident = null, c = null;
+
+  function hydrate() {
+    c = A.Gen.hydrate(ident);
+    A.CHARACTERS = [c];
+  }
+
+  // Editördeki (kaydedilmemiş) veriler: bot = BOT_RULES biçimi, dialog = CUSTOM_DIALOG biçimi
+  function setData(d) {
+    if (d.bot) A.BOT_RULES = d.bot; // motor (engine.js) kuralları ve ekleri buradan okur
+    if (d.dialog) {
+      A.INTENTS = clone(P.intents); A.INTENT_EFFECTS = clone(P.effects); A.ARCHETYPES = clone(P.arch);
+      A.CUSTOM_DIALOG = d.dialog;
+      A.Engine.applyDialog(d.dialog);
+      A.Kume.reload();
+      if (ident) hydrate();
+    }
+  }
+
+  // Yeni karakter ve boş sohbet. o: { archetype, name, lv, user }
+  function setup(o) {
+    A.Store.reset();
+    S().user.name = o.user || '';
+    ident = A.Gen.draft({ archetype: o.archetype, name: o.name || undefined });
+    S().characters = [ident];
+    hydrate();
+    setLevel(o.lv || 1);
+    if (o.mood) setMood(o.mood);
+    return info();
+  }
+  function setLevel(lv) {
+    S().affinity[c.id] = A.Engine.LEVELS[Math.max(0, Math.min(A.Engine.LEVELS.length - 1, lv - 1))];
+  }
+  // Ruh hali: 'auto' saate ve kişiliğe göre (uygulamadaki gibi), ya da Mood.PRESETS'ten biri
+  const moods = () => Object.keys(A.Mood.PRESETS).map(id => ({ id, ...A.Mood.LABELS[id] }));
+  function setMood(id) {
+    if (!A.Mood.PRESETS[id]) A.Mood.reset(c);
+    else A.Mood.set(c, A.Mood.PRESETS[id], { source: 'simülatör' });
+  }
+
+  function info() {
+    const st = A.Schedule.status(c), mood = A.Mood.current(c), lv = A.Engine.level(c), at = A.Kume.where(c);
+    return {
+      name: c.name, display: c.display, photo: c.photo, arch: c.archLabel, icon: c.emoji, age: c.age, job: c.job,
+      lv: lv.lv, lvName: lv.name, interest: A.Interest.get(c), ignore: A.Interest.ignoreChance(c),
+      mood: A.Mood.modifiers(mood.values).label, moodName: (A.Mood.LABELS[A.Mood.modifiers(mood.values).label] || {}).name || '',
+      moodEmoji: (A.Mood.LABELS[A.Mood.modifiers(mood.values).label] || {}).emoji || '', values: mood.values,
+      online: A.Mood.isOnline(c), state: st.state, status: st.status || '',
+      kume: at ? { scenario: at.sc.name, state: at.st.name, icon: at.st.icon || '' } : null
+    };
+  }
+
+  /* Bir tur, uygulamadaki gibi: Engine.respond (küme → bot kuralları → niyetler…, sonda otomatik ekler)
+   * → { parts, delays, trace, addons, before, info } */
+  function turn(texts) {
+    const chat = S().chats[c.id] = S().chats[c.id] || [];
+    texts.forEach(t => chat.push({ from: 'me', text: t, ts: Date.now() }));
+    const before = info(), r = A.Engine.respond(c, texts);
+    r.parts.forEach(p => chat.push({ from: 'her', text: p, ts: Date.now() }));
+    A.Store.save();
+    return { parts: r.parts, delays: r.delays, trace: r.trace || (r.leave ? { src: 'sosyal pili bitti: sohbetten çıktı' } : {}), addons: r.addons || [], before, info: info() };
+  }
+
+  return { setData, setup, setLevel, setMood, moods, turn, info, ready: true };
+})();
+</script>
+</body>
+</html>

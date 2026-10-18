@@ -12,7 +12,7 @@ $fonts = New-Object System.Drawing.Text.PrivateFontCollection
 $fonts.AddFontFile((Join-Path $PSScriptRoot 'fonts\Nunito-Black.ttf'))
 $script:logoFont = $fonts.Families[0]
 
-function Draw-Icon([int]$size, [string]$file, [bool]$maskable) {
+function Draw-Icon([int]$size, [string]$file, [bool]$maskable, [double]$textScale) {
   $bmp = New-Object System.Drawing.Bitmap $size, $size
   $g = [System.Drawing.Graphics]::FromImage($bmp)
   $g.SmoothingMode = 'AntiAlias'
@@ -43,10 +43,10 @@ function Draw-Icon([int]$size, [string]$file, [bool]$maskable) {
   }
 
   # "amor" yazisi: acilis ekranindaki logo ile ayni font (Nunito Black, kucuk harf, sik harf araligi)
-  # maskable ikonda guvenli alan icin daha kucuk
+  # $textScale: yazi boyu / ikon boyu (Android maskable ikonda guvenli alan icin daha kucuk)
   $white = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::White)
   $g.TextRenderingHint = 'AntiAlias'
-  $fs = if ($maskable) { $size * 0.27 } else { $size * 0.34 }
+  $fs = $size * $textScale
   $font = New-Object System.Drawing.Font $script:logoFont, ([single]$fs), ([System.Drawing.FontStyle]::Regular), ([System.Drawing.GraphicsUnit]::Pixel)
   $fmt = [System.Drawing.StringFormat]::GenericTypographic
   $track = -$fs * 2 / 64   # CSS: 64px'te letter-spacing -2px
@@ -67,7 +67,7 @@ function Draw-Icon([int]$size, [string]$file, [bool]$maskable) {
   Write-Output "icons/$file"
 }
 
-Draw-Icon 192 'icon-192.png' $false
-Draw-Icon 512 'icon-512.png' $false
-Draw-Icon 512 'icon-maskable-512.png' $true
-Draw-Icon 180 'apple-touch-icon.png' $true
+Draw-Icon 192 'icon-192.png' $false 0.40
+Draw-Icon 512 'icon-512.png' $false 0.40
+Draw-Icon 512 'icon-maskable-512.png' $true 0.32
+Draw-Icon 180 'apple-touch-icon.png' $true 0.38

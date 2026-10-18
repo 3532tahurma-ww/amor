@@ -129,17 +129,40 @@ window.Amor = window.Amor || {};
    * Dokundukça para eklenir (miktar, açılış katkısı, sınırlar ve aşırı dokunma: Wallet.tapInfo). onChange: bakiye değişince */
   function walletSheet(onChange) {
     const sh = sheet(`
-      <div class="sheet-grip"></div>
+      <div class="ws-top"><button class="icon-btn" id="wsClose" aria-label="Kapat"><svg viewBox="0 0 24 24"><path d="M20 12H5M11 5l-7 7 7 7"/></svg></button><b>👛 Cüzdanım</b><span></span></div>
       <div class="wallet-sheet">
-        <small>👛 Cüzdanım</small>
         <b class="ws-bal" id="wsBal"></b>
         <div class="ws-row"><span>Toplam harcama</span><b id="wsSpent"></b></div>
         <button class="ws-tap" id="wsTap" type="button"><span class="ws-coin">₺</span><b id="wsRate"></b><small id="wsHint"></small></button>
         <div class="ws-note" id="wsNote"></div>
         <div class="ws-bonus" id="wsBonus"></div>
         <div class="ws-limits" id="wsLimits"></div>
-      </div>`, 'light');
+        <div class="ws-ups"><div class="ws-ups-h">⚡ Gelişimler</div><div id="wsUps"></div></div>
+      </div>`, 'light full');
     const el = sh.el;
+    $('#wsClose', el).onclick = sh.close;
+    // Gelişim kartı: şu anki → sonraki değer ve fiyatı (Wallet.upgradeInfo)
+    function upCard(id) {
+      const u = W().upgradeInfo(id), i = W().tapInfo();
+      const val = m => id === 'rate' ? tl(Math.round(i.after / u.now * m)) + ' / dokunuş' : `${i.limits.map(l => Math.round(l.max / u.now * m)).join(' · ')} dokunuş`;
+      return `<div class="ws-up">
+        <span class="ws-up-ic">${u.icon}</span>
+        <div class="ws-up-tx"><b>${u.name} <small>Sv.${u.lv}/${u.max}</small></b>
+          <small>${u.next ? `${val(u.now)} → <em>${val(u.next)}</em>` : `${val(u.now)} · en üst seviye`}</small>
+          <div class="bar"><i style="width:${u.lv / u.max * 100}%"></i></div></div>
+        <button class="btn sm pink" data-up="${id}" ${u.cost == null || W().purse() < u.cost ? 'disabled' : ''}>${u.cost == null ? 'MAX' : tl(u.cost)}</button>
+      </div>`;
+    }
+    $('#wsUps', el).onclick = e => {
+      const b = e.target.closest('[data-up]');
+      if (!b) return;
+      const r = W().buyUpgrade(b.dataset.up);
+      if (!r.ok) return notify(r.reason === 'max' ? 'Zaten en üst seviyede' : 'Cüzdanda yeterli para yok', '😕');
+      burst('⚡', 12);
+      notify(`${r.info.icon} ${r.info.name} Sv.${r.info.lv}`, '⚡');
+      onChange && onChange();
+      draw();
+    };
     const mmss = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
     function draw() {
       const i = W().tapInfo();
@@ -156,6 +179,9 @@ window.Amor = window.Amor || {};
       $('#wsLimits', el).innerHTML = i.limits.map(l => `<div class="ws-lim ${l.used >= l.max ? 'full' : ''}">
           <span>${l.min} dk</span><div class="bar"><i style="width:${Math.min(100, l.used / l.max * 100)}%"></i></div>
           <em>${l.used >= l.max ? mmss(l.resetIn) : `${l.used}/${l.max}`}</em></div>`).join('');
+      // her saniye çiziliyor: değişmediyse dokunma (düğmeye basarken yenilenmesin)
+      const ups = Object.keys(W().TAP_UPGRADES).map(upCard).join('');
+      if ($('#wsUps', el).dataset.html !== ups) { $('#wsUps', el).innerHTML = ups; $('#wsUps', el).dataset.html = ups; }
     }
     $('#wsTap', el).onclick = e => {
       const r = W().tapPurse();

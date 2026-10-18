@@ -101,11 +101,37 @@ Amor.Wallet = (() => {
    *   Açılış katkısı: ilk TAP_BONUS dokunuş TAP_FIRST kuruş, sonra TAP_BASE kuruş.
    *   Sınırlar: TAP_LIMITS = [dakika, en fazla dokunuş]; biri dolunca o pencere boşalana kadar dokunulamaz.
    *   Aşırı dokunma: son 10 sn'de TAP_CALM'dan fazla dokunuş olursa miktar adım adım düşer, TAP_HARD'da TAP_MIN olur;
-   *   yavaşlayınca toparlanır. */
+   *   yavaşlayınca toparlanır.
+   *   Gelişimler (TAP_UPGRADES, cüzdandan alınır): "rate" her seviyede dokunuş başı miktarı (ve en düşük miktarı) step kadar,
+   *   "limit" her seviyede sınırlardaki en fazla dokunuşu step kadar artırır. Seviye fiyatı: cost × grow^seviye. */
   const TAP_FIRST = 100, TAP_BASE = 40, TAP_MIN = 20, TAP_BONUS = 100, TAP_CALM = 8, TAP_HARD = 25;
   const TAP_LIMITS = [[5, 90], [10, 150], [30, 300]];
+  const TAP_UPGRADES = {
+    rate: { name: 'Dokunuş değeri', icon: '💰', step: 0.25, max: 10, cost: 1500, grow: 1.75 },
+    limit: { name: 'Limitler', icon: '📈', step: 0.2, max: 10, cost: 2500, grow: 1.8 }
+  };
   const purse = () => st().wallet.purse;
   const purseSpent = () => st().wallet.purseSpent;
+
+  const upLevel = id => (st().wallet.upgrades || {})[id] || 0;
+  const upMult = id => 1 + TAP_UPGRADES[id].step * upLevel(id);
+  // Gelişimin durumu: { id, name, icon, lv, max, cost (sonraki seviye, kuruş; son seviyedeyse null), now, next (çarpan) }
+  function upgradeInfo(id) {
+    const u = TAP_UPGRADES[id], lv = upLevel(id);
+    return { id, name: u.name, icon: u.icon, lv, max: u.max, cost: lv < u.max ? Math.round(u.cost * u.grow ** lv) : null,
+      now: 1 + u.step * lv, next: lv < u.max ? 1 + u.step * (lv + 1) : null };
+  }
+  // Gelişim al: { ok, reason }
+  function buyUpgrade(id) {
+    const i = upgradeInfo(id), w = st().wallet;
+    if (i.cost == null) return { ok: false, reason: 'max' };
+    if (w.purse < i.cost) return { ok: false, reason: 'para' };
+    w.purse -= i.cost;
+    w.purseSpent += i.cost;
+    w.upgrades = { ...(w.upgrades || {}), [id]: i.lv + 1 };
+    save();
+    return { ok: true, info: upgradeInfo(id) };
+  }
 
   function tapLog() {
     const w = st().wallet;
@@ -117,16 +143,17 @@ Amor.Wallet = (() => {
   function tapInfo() {
     const w = st().wallet, now = Date.now(), taps = tapLog();
     const bonusLeft = Math.max(0, TAP_BONUS - (w.tapsTotal || 0));
-    const base = bonusLeft ? TAP_FIRST : TAP_BASE;
+    const rm = upMult('rate'), lm = upMult('limit');
+    const after = Math.round(TAP_BASE * rm), base = bonusLeft ? Math.max(TAP_FIRST, after) : after;
     const recent = taps.filter(t => now - t < 10000).length;
     const factor = recent <= TAP_CALM ? 1 : Math.max(0, 1 - (recent - TAP_CALM) / (TAP_HARD - TAP_CALM));
-    const rate = Math.max(TAP_MIN, Math.round(base * factor));
-    const limits = TAP_LIMITS.map(([min, max]) => {
-      const win = taps.filter(t => now - t < min * 60000);
+    const rate = Math.max(Math.round(TAP_MIN * rm), Math.round(base * factor));
+    const limits = TAP_LIMITS.map(([min, max0]) => {
+      const max = Math.round(max0 * lm), win = taps.filter(t => now - t < min * 60000);
       return { min, max, used: win.length, resetIn: win.length >= max ? win[win.length - max] + min * 60000 - now : 0 };
     });
     const wait = Math.max(0, ...limits.map(l => l.resetIn));
-    return { rate, base, slowed: rate < base, bonusLeft, bonusTotal: TAP_BONUS, first: TAP_FIRST, after: TAP_BASE, limits, wait };
+    return { rate, base, slowed: rate < base, bonusLeft, bonusTotal: TAP_BONUS, first: TAP_FIRST, after, limits, wait };
   }
   // Dokunuş: { ok, amount, info } — sınır doluysa ok: false
   function tapPurse() {
@@ -402,7 +429,7 @@ Amor.Wallet = (() => {
 
   return {
     st, today, coins, add, spend, wealth, vip, hasPerk,
-    recharge, purse, purseSpent, tapPurse, tapInfo, buyPack, monthlyTiers, claimTier, cards, useCard,
+    recharge, purse, purseSpent, tapPurse, tapInfo, buyPack, upgradeInfo, buyUpgrade, TAP_UPGRADES, monthlyTiers, claimTier, cards, useCard,
     checkinState, doCheckin, track, taskProgress, claimTask, achievementProgress, claimAchievement, claimableCount,
     vipBonusAvailable, claimVipBonus, spinsLeft, spin,
     addGift, bag, owns, expiresIn, buyItem, equip, activeFrame, activeBg, activeBubble, chatTheme,

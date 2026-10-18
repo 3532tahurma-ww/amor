@@ -248,7 +248,7 @@ Her balona karakterin `style` ayarları uygulanır:
 
 ## 16. Diyalog editörü ve özelleştirme
 
-`tools/dialog-editor.html` (`diyalog-editoru.bat`) değişiklikleri [js/data/custom-dialog.js](../js/data/custom-dialog.js) dosyasına `Amor.CUSTOM_DIALOG` olarak yazar. Motor açılışta `applyDialog` ile bunları varsayılanların üzerine uygular:
+`tools/dialog-editor.html` (`bot-editoru.bat` → 💬 Diyalog sekmesi) değişiklikleri [js/data/custom-dialog.js](../js/data/custom-dialog.js) dosyasına `Amor.CUSTOM_DIALOG` olarak yazar. Motor açılışta `applyDialog` ile bunları varsayılanların üzerine uygular:
 
 ```js
 Amor.CUSTOM_DIALOG = {

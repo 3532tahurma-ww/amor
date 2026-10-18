@@ -160,6 +160,7 @@
     const b = $('#navBadge');
     b.hidden = !n;
     b.textContent = n > 99 ? '99+' : n;
+    if (A.Notify) A.Notify.badge(n);
   }
 
   function toast(c, text) {
@@ -1115,6 +1116,7 @@
       if (!msgs.length) return;
       // İlgisini kaybettiyse "Görüldü"de bırakabilir
       if (mode !== 'back' && Math.random() < A.Interest.ignoreChance(c)) { A.Store.save(); refresh(c); return; }
+      // Bot kuralları ve otomatik ekler motorun içinde (engine.js → js/bot.js)
       const r = mode === 'back' ? A.Engine.comeBack(c, msgs, (S().pendingReason || {})[c.id]) : A.Engine.respond(c, msgs);
       play(c, r);
     }, wait);
@@ -1222,6 +1224,7 @@
 
   function pushHer(c, text) {
     chatOf(c).push({ from: 'her', text, ts: Date.now() });
+    if ((!onChatWith(c) || document.hidden) && A.Notify) A.Notify.message(c, text);
     if (!onChatWith(c)) {
       S().unread[c.id] = (S().unread[c.id] || 0) + 1;
       toast(c, text);
@@ -1629,6 +1632,11 @@
         </div>
 
         <div class="card" style="margin-top:12px">
+          <div class="sec-title" style="margin-top:0">🔔 Bildirimler</div>
+          ${notifyCard()}
+        </div>
+
+        <div class="card" style="margin-top:12px">
           <div class="sec-title" style="margin-top:0">Hesap</div>
           <div class="info-row"><span>Kullanıcı adı</span><b>@${esc(acc.username)}</b></div>
           <div class="info-row"><span>Oluşturulma</span><b>${new Date(acc.created).toLocaleDateString('tr-TR')}</b></div>
@@ -1646,6 +1654,12 @@
 
     const ib = $('#installBtn');
     if (ib) ib.onclick = async () => { installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; renderMe(); };
+    const nb = $('#notifyBtn');
+    if (nb) nb.onclick = async () => {
+      if (A.Notify.on()) A.Notify.disable();
+      else if (await A.Notify.enable() === 'granted') { A.Notify.message({ id: 'test', name: 'Amor', photo: null }, 'Bildirimler açık 🔔 Kızlar yazınca burada göreceksin.'); updateBadge(); }
+      renderMe();
+    };
     const bind = (id, key) => $(id).onchange = () => { u[key] = $(id).value.trim(); A.Store.save(); renderMe(); };
     bind('#uName', 'name'); bind('#uAge', 'age'); bind('#uCity', 'city');
     $('#accSwitch').onclick = () => { A.Store.logout(); location.hash = '#/home'; location.reload(); };
@@ -1750,6 +1764,19 @@
     installPrompt = e;
     if (ui.route && ui.route.name === 'me') renderMe();
   });
+
+  // Ben → Bildirimler: duruma göre aç/kapat düğmesi ya da ne yapılacağı (js/notify.js)
+  function notifyCard() {
+    const N = A.Notify, p = N.permission();
+    const row = (txt, btn) => `<div class="info-row"><span>${txt}</span>${btn || ''}</div>`;
+    if (p === 'unsupported') return N.ios() && !N.standalone()
+      ? row('iPhone\'da bildirim için Amor\'u ana ekrana ekle (Safari → Paylaş → Ana Ekrana Ekle) ve oradan aç.')
+      : row('Bu tarayıcı bildirimleri desteklemiyor.');
+    if (p === 'denied') return row('İzin kapalı. Telefon Ayarlar → Bildirimler → Amor\'dan açabilirsin.');
+    return row(N.on() ? 'Açık: kızlar yazınca bildirim gelir, ikonda okunmamış sayısı görünür.' : 'Kızlar yazınca uygulama arka plandayken bile haber ver.',
+      `<button class="btn sm ${N.on() ? 'ghost' : 'pink'}" id="notifyBtn">${N.on() ? 'Kapat' : 'Aç'}</button>`) +
+      '<small style="color:var(--muted)">Uygulama tamamen kapalıyken kızlar da yazmaz; açınca bekleyen cevaplar gelir.</small>';
+  }
 
   function installCard() {
     if (standalone()) return '';

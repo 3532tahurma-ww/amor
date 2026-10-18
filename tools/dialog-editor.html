@@ -144,9 +144,19 @@
   #toast.on { opacity: 1; }
   .fatal { max-width: 560px; margin: 60px auto; background: var(--card); border-radius: 14px; padding: 20px 24px; border: 1px solid var(--line); }
   @media (max-width: 860px) { .wrap { grid-template-columns: 1fr; } aside { position: static; max-height: 300px; } .grid2 { grid-template-columns: 1fr; } }
+
+  /* Bot editörünün "Diyalog" sekmesinde (?embed=1): onun cozy renkleri, logo üst çubukta zaten var */
+  .embed {
+    --bg: #fbf5ec; --card: #fffdf9; --ink: #4a3b33; --mute: #a08f83; --line: #efe3d4;
+    --accent: #e8798f; --accent-soft: #fde8ea; --warn: #d9576b; --warn-soft: #fde8ea; --ok: #6aa58a; --mod: #f4a26b;
+  }
+  .embed .logo { display: none; }
+  .embed .btn { border-radius: 999px; }
+  .embed .btn.pri { background: linear-gradient(135deg, #f4a26b, #e8798f); border: 0; }
 </style>
 </head>
 <body>
+<script>if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add('embed');</script>
 <header>
   <div class="bar">
     <div class="logo">am<span>o</span>r <small>Diyalog editörü</small></div>
@@ -222,6 +232,7 @@
 
   let D = { intents: {}, lines: {} };
   let saved = JSON.stringify(D);
+  window.dialogDraft = () => D; // bot editörünün 🧪 Dene sekmesi kaydedilmemiş hâli buradan alır
   let cur = 'greet';
   let arch = P.arch[0].id;
 
@@ -820,7 +831,7 @@
     })
     .catch(() => {
       document.body.innerHTML = `<div class="fatal"><h2>Sunucuya ulaşılamadı</h2>
-        <p>Bu sayfa proje klasöründeki <b>diyalog-editoru.bat</b> ile açılmalı. Bat dosyası küçük bir yerel sunucu başlatır ve editörü tarayıcıda açar;
+        <p>Bu sayfa proje klasöründeki <b>bot-editoru.bat</b> ile açılmalı. Bat dosyası küçük bir yerel sunucu başlatır ve editörü tarayıcıda açar;
         kaydettiklerin <code>js/data/custom-dialog.js</code> dosyasına yazılır.</p>
         <p>Siyah pencere kapandıysa bat dosyasını tekrar çalıştır.</p></div>`;
     });

@@ -26,7 +26,7 @@ js/engine.js            cevap motoru (niyet → ruh hali → kalıp → yazım t
 js/app.js               ekranlar ve sohbet akışı
 js/kume.js              Küme sistemi: senaryolar, konuşma kümesi fonksiyonları, kişilik havuzları
 js/data/custom-dialog.js diyalog editörünün kaydettiği değişiklikler
-tools/dialog-editor.html diyalog editörü (diyalog-editoru.bat ile açılır)
+tools/dialog-editor.html diyalog editörü (bot-editoru.bat → 💬 Diyalog sekmesi)
 tools/background.html   arka plan izleyici: kadınların görünmeyen erkeklerle sohbet/hediye/arama simülasyonu (editörde "Arka plan")
 js/background.js        arka plan sohbetleri (erkek karakterler: js/data/males.js)
 js/wish.js              hediye niyeti: hediye isteme, karşılanınca / karşılanmayınca tepki

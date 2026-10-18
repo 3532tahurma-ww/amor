@@ -76,6 +76,17 @@ Açılış katkısı bittikten sonra, sınırlar tam kullanıldığında:
 Sabitler [js/wallet.js](../js/wallet.js) içinde tek satırda:
 `TAP_FIRST` (1 ₺), `TAP_BASE` (0,40 ₺), `TAP_MIN` (0,20 ₺), `TAP_BONUS` (100 dokunuş), `TAP_CALM` / `TAP_HARD` (8 / 25 dokunuş), `TAP_LIMITS`.
 
+### ⚡ Gelişimler
+
+Cüzdan menüsünün altında, cüzdandaki parayla alınır (`TAP_UPGRADES`). Alınan seviye kalıcıdır, harcanan para "Toplam harcama"ya eklenir.
+
+| Gelişim | Her seviyede | En üst | Fiyat (seviye 0 → 1, sonra her seviye ×) |
+|---|---|---|---|
+| 💰 Dokunuş değeri | dokunuş başı miktar ve en düşük miktar +%25 (0,40 ₺ → 0,50 ₺ …) | Sv.10 (1,00 ₺) | 15 ₺, ×1,75 (hepsi ≈5.370 ₺) |
+| 📈 Limitler | 5 / 10 / 30 dk sınırlarındaki en fazla dokunuş +%20 (90 → 108 …) | Sv.10 (×3) | 25 ₺, ×1,8 (hepsi ≈11.100 ₺) |
+
+Açılış katkısı (1 ₺) sürerken dokunuş değeri en az 1 ₺'dir; gelişim onu geçince yüksek olan kullanılır.
+
 ---
 
 ## 3. Coin paketleri (₺ → coin)
@@ -225,7 +236,7 @@ Günlük giriş + görevlerle günde yaklaşık 115 coin ve birkaç sohbet kart�
 
 ## 8. Arka plandaki erkeklerin harcaması
 
-Arka plandaki erkek karakterler de hediye atar, arar, yakınlık kurar. Onların harcaması **senin coinlerinden düşmez**; ayrı tutulur ve sadece izleme sayfasında (diyalog-editoru.bat → 🛠️ Arka plan) görünür.
+Arka plandaki erkek karakterler de hediye atar, arar, yakınlık kurar. Onların harcaması **senin coinlerinden düşmez**; ayrı tutulur ve sadece izleme sayfasında (bot-editoru.bat → 💬 Diyalog → 🛠️ Arka plan) görünür.
 
 - Aynı fiyatlar geçerlidir: arama 400 / 800 coin/dk, hediye fiyatları, yakınlık hediyeleri.
 - İzleme sayfası her erkeğin ve her sohbetin toplam harcamasını coin ve ₺ olarak gösterir.

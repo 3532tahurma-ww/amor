@@ -5,12 +5,12 @@
  * arka planda güncellenir (stale-while-revalidate). Fotoğraflar ilk görüldüklerinde saklanır.
  * Yeni sürüm yayınlarken VERSION'ı artır, eski önbellek silinir.
  */
-const VERSION = 'amor-v78';
+const VERSION = 'amor-v83';
 const CORE = [
   './', './index.html', './manifest.json', './css/style.css',
   './js/store.js', './js/data/photos.js', './js/data/pools.js', './js/data/archetypes.js', './js/data/intents.js', './js/data/males.js', './js/kume.js',
   './js/data/shop.js', './js/data/questions.js', './js/data/memory-data.js', './js/data/reflect.js','./js/data/custom-characters.js',
-  './js/data/custom-dialog.js', './js/schedule.js', './js/mood.js',
+  './js/data/custom-dialog.js', './js/data/bot-rules.js', './js/bot.js', './js/notify.js', './js/schedule.js', './js/mood.js',
   './js/memory.js', './js/interest.js', './js/nlu.js', './js/reflect.js','./js/engine.js', './js/generator.js', './js/wallet.js', './js/wish.js', './js/shop.js', './js/games.js', './js/background.js', './js/broadcast.js', './js/feed.js', './js/rooms.js', './js/agency.js', './js/match.js', './js/app.js', './js/call.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'
 ];
@@ -26,6 +26,17 @@ self.addEventListener('activate', e => {
       .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== IMG_CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
+});
+
+// Bildirime dokununca (js/notify.js): açık uygulamayı öne getirip o sohbete geç, kapalıysa sohbetle aç
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const hash = (e.notification.data || {}).hash || '';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    const w = list[0];
+    if (w) { w.postMessage({ type: 'open', hash }); return w.focus(); }
+    return self.clients.openWindow(new URL('./' + hash, self.registration.scope).href);
+  }));
 });
 
 self.addEventListener('fetch', e => {
