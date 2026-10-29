@@ -60,6 +60,27 @@ Amor.GIFTS = [
   { id: 'lunapark', name: 'Lunapark', e: '🎡', price: 59990, tab: 'hediye' },
   { id: 'gul-kalesi', name: 'Gül kalesi', e: '🏯', price: 99990, tab: 'hediye' },
   { id: 'donen-kale', name: 'Dönen kale', e: '🌌', price: 177770, tab: 'hediye' },
+  { id: 'kurabiye', name: 'Şans kurabiyesi', e: '🥠', price: 25, tab: 'hediye', isNew: true },
+  { id: 'dondurma', name: 'Dondurma', e: '🍦', price: 40, tab: 'hediye', isNew: true },
+  { id: 'kupkek', name: 'Kalpli kupkek', e: '🧁', price: 65, tab: 'hediye', isNew: true },
+  { id: 'papatya', name: 'Papatya', e: '🌼', price: 85, tab: 'hediye', isNew: true },
+  { id: 'kokteyl', name: 'Kokteyl', e: '🍹', price: 130, tab: 'hediye', isNew: true },
+  { id: 'sampanya', name: 'Şampanya', e: '🍾', price: 280, tab: 'hediye', isNew: true },
+  { id: 'oyuncak-ayi', name: 'Pelüş ayı', e: '🐻', price: 380, tab: 'hediye', isNew: true },
+  { id: 'kiraz-cicegi', name: 'Kiraz çiçeği', e: '🌸', price: 550, tab: 'hediye', isNew: true },
+  { id: 'topuklu', name: 'Kırmızı topuklu', e: '👠', price: 900, tab: 'hediye', isNew: true },
+  { id: 'canta-luks', name: 'Lüks çanta', e: '👜', price: 1350, tab: 'hediye', isNew: true },
+  { id: 'gelinlik', name: 'Beyaz gelinlik', e: '👰', price: 2200, tab: 'hediye', isNew: true },
+  { id: 'elmas', name: 'Pırlanta', e: '💎', price: 2750, tab: 'hediye', isNew: true },
+  { id: 'tac', name: 'Prenses tacı', e: '👸', price: 3500, tab: 'hediye', isNew: true },
+  { id: 'kizil-ferrari', name: 'Kırmızı spor araba', e: '🚗', price: 4500, tab: 'hediye', isNew: true },
+  { id: 'saray', name: 'Masal sarayı', e: '🕌', price: 7000, tab: 'hediye', isNew: true },
+  { id: 'helikopter', name: 'Altın helikopter', e: '🚁', price: 12000, tab: 'hediye', isNew: true },
+  { id: 'dunya-turu', name: 'Dünya turu', e: '🌍', price: 17500, tab: 'hediye', isNew: true },
+  { id: 'kayan-yildiz', name: 'Kayan yıldız', e: '🌠', price: 25000, tab: 'hediye', isNew: true },
+  { id: 'anka', name: 'Anka kuşu', e: '🔥', price: 49999, tab: 'hediye', isNew: true },
+  { id: 'gezegen', name: 'Sana bir gezegen', e: '🪐', price: 77777, tab: 'hediye', isNew: true },
+  { id: 'galaksi-kalp', name: 'Galaksi kalbi', e: '💖', price: 129990, tab: 'hediye', isNew: true },
   { id: 'vip-tac', name: 'VIP taç', e: '👑', price: 5990, tab: 'hediye', vip: 5 },
 
   { id: 'degerli-tas', name: 'Değerli taş yüzük', e: '💍', price: 1500, tab: 'dostluk', rel: 'cp' },
@@ -121,6 +142,9 @@ Amor.RECHARGE_PACKS = [
   { coins: 150000, price: 7322.99, bonus: 9000 },
   { coins: 250000, price: 12204.98, bonus: 18000 }
 ];
+
+// Çoklu hesap: cihazdaki kaçıncı hesapsa (0 = ilk) yükleme paketlerinin ₺ fiyatı bu çarpanla artar; listenin sonu üst sınır
+Amor.MULTI_ACCOUNT_MARKUP = [1, 1.5, 2, 2.5, 3];
 
 // Aylık yükleme hedefleri (Yükleme Yıldızı etkinliği)
 Amor.MONTHLY_TIERS = [

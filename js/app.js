@@ -795,6 +795,7 @@
         <div class="msgs" id="msgs"></div>
 
         <div id="forceBar">${forceBtn(c)}</div>
+        ${TEST ? `<div id="testBar">${testBar(c)}</div>` : ''}
         <div class="quick" id="quick">${quick.map(q => `<button>${esc(q)}</button>`).join('')}</div>
         <form class="composer" id="composer" autocomplete="off">
           <span class="card-chip" id="cardChip" title="Ücretsiz sohbet kartı: her kart bir mesajı ücretsiz gönderir" ${A.Wallet.cards() ? '' : 'hidden'}>🎟️ ${A.Wallet.cards()} ücretsiz</span>
@@ -913,7 +914,10 @@
     if (typing[c.id]) { setTimeout(() => reactGift(c, r), 700); return; }
     clearTimeout(timers[c.id]);
     const res = A.Engine.giftReact(c, r);
-    if (r.wishLine) { res.parts.push(r.wishLine); res.delays.push(1600); }
+    if (r.wishLine) r.wishLine.split('|').forEach(p => { res.parts.push(p); res.delays.push(1600); });
+    // hediye karşılığı sözü verilen fotoğraf (js/wish.js)
+    const photo = A.Wish && A.Wish.takePhoto(c);
+    if (photo) { res.parts.push({ photo }); res.delays.push(1800); }
     play(c, res);
   }
 
@@ -985,7 +989,8 @@
       if (m.from === 'sys') {
         html += `<div class="sys">${esc(m.text)}</div>`;
       } else if (m.from === 'her') {
-        html += `<div class="msg her ${prevFrom === 'her' ? 'cont' : ''}">${avatar(c, 36, { dot: false })}<div class="bubble">${esc(m.text)}</div></div>`;
+        const body = m.type === 'photo' ? `<div class="bubble photo-bubble"><img src="${esc(m.src)}" alt="" loading="lazy"></div>` : `<div class="bubble">${esc(m.text)}</div>`;
+        html += `<div class="msg her ${prevFrom === 'her' ? 'cont' : ''}">${avatar(c, 36, { dot: false })}${body}</div>`;
       } else {
         const answered = msgs.slice(i + 1).some(x => x.from === 'her');
         const g = m.type === 'gift' ? A.Wallet.giftById(m.gift) : null;
@@ -1029,6 +1034,8 @@
     el.className = p.cls;
     const fb = $('#forceBar');
     if (fb) fb.innerHTML = forceBtn(c);
+    const tb = $('#testBar');
+    if (tb) tb.innerHTML = testBar(c);
   }
 
   // Mesaj ücreti kızın cazibe seviyesine göre (Amor.MSG_COST_BY_CHARM); sohbet kartı varsa önce o kullanılır
@@ -1169,6 +1176,42 @@
     if (b) { const c = A.byId(b.dataset.force); if (c) forceOnline(c); }
   });
 
+  /* ---------- Test modu (test-modu.bat): gizli parametreler, hemen cevap ---------- */
+  const TEST = A.Wallet.FREE;
+  function testBar(c) {
+    if (!TEST) return '';
+    const P = A.Params, p = P.get(c), f = P.feels(c), sc = (S().scene || {})[c.id] || {};
+    const row = (k, v) => `<span><b>${esc(k)}</b> ${esc(String(typeof v === 'number' ? Math.round(v) : v))}</span>`;
+    const list = (k, a) => `<div><b>${esc(k)}</b> ${esc(a.join(', ') || '-')}</div>`;
+    const panel = ui.testOpen ? `<div class="test-panel">
+        <div>${Object.entries(p.v).map(([k, v]) => row(k, v)).join('')}</div>
+        <div>${row('zevk', p.me.zevk)}${row('cum', p.me.cum)}${row('cumN', p.me.cumN)}${row('döngü', P.cyclePhase(c))}${row('hamile', p.hamile ? P.pregWeek(c) + '. hafta' : 'hayır')}${row('gebelik', Math.round(P.pregChance(c) * 100) + '%')}</div>
+        <div>${row('sahne', A.Intent.phase(c) || '-')}${row('poz', sc.pos ? sc.pos.title : '-')}${row('fant', sc.fant || '-')}${row('mod', sc.mode || '-')}${row('korunma', sc.prot || '-')}${row('ısrar', p.israr || 0)}${row('izin', p.izinVerdi ? 'evet' : 'hayır')}${row('soru', p.ask ? p.ask.t : '-')}</div>
+        <div>${row('çevrimiçi', A.Mood.isOnline(c) ? 'evet' : 'hayır')}${row('ilgi', Math.round(A.Interest.get(c) * 100) + '%')}${row('LV', A.Engine.level(c).lv)}</div>
+        ${list('Özellik', P.traits(c))}${list('Sever', f.likes)}${list('Sevmez', f.dislikes)}${list('İzin', f.allows)}${list('İzin yok', f.denies)}
+      </div>` : '';
+    return `<div class="force-bar test-bar"><span>🧪 Test</span>
+        <button class="btn sm" data-test-toggle="${c.id}">${ui.testOpen ? 'Gizle' : 'Parametreler'}</button>
+        <button class="btn pink sm" data-test-reply="${c.id}">⚡ Hemen cevap ver</button></div>${panel}`;
+  }
+  // Bekleme, çevrimdışı ve "Görüldü"de bırakma atlanır; yazıyor süresi kısa
+  function forceReply(c) {
+    const msgs = unanswered(c);
+    if (typing[c.id]) return;
+    if (!msgs.length) return A.Eco.notify('Cevaplanacak mesaj yok', '🧪');
+    clearTimeout(timers[c.id]);
+    reading[c.id] = false;
+    S().pending[c.id] = false;
+    markSeen(c);
+    const r = A.Engine.respond(c, msgs);
+    play(c, { ...r, delays: r.delays.map(d => Math.min(d, 600)) });
+  }
+  if (TEST) document.addEventListener('click', e => {
+    const t = e.target.closest('[data-test-toggle]'), r = e.target.closest('[data-test-reply]');
+    if (t) { ui.testOpen = !ui.testOpen; updateStatus(A.byId(t.dataset.testToggle)); }
+    if (r) { const c = A.byId(r.dataset.testReply); if (c) forceReply(c); }
+  });
+
   // Son gönderilen mesajlar "görüldü"
   function markSeen(c) {
     const msgs = chatOf(c);
@@ -1222,8 +1265,10 @@
     next();
   }
 
-  function pushHer(c, text) {
-    chatOf(c).push({ from: 'her', text, ts: Date.now() });
+  function pushHer(c, part) {
+    // { photo }: fotoğraf balonu (js/wish.js)
+    const text = part && part.photo ? '📷 Fotoğraf' : part;
+    chatOf(c).push(part && part.photo ? { from: 'her', type: 'photo', src: part.photo, text, ts: Date.now() } : { from: 'her', text, ts: Date.now() });
     if ((!onChatWith(c) || document.hidden) && A.Notify) A.Notify.message(c, text);
     if (!onChatWith(c)) {
       S().unread[c.id] = (S().unread[c.id] || 0) + 1;
@@ -1510,12 +1555,30 @@
     ui.route = { name: 'auth' };
     app.classList.add('no-nav');
     const list = A.Store.accounts();
-    const mode = auth.mode || (list.length ? 'login' : 'register');
+    const mode = auth.mode || 'welcome';
     const err = auth.error ? `<div class="auth-err">${esc(auth.error)}</div>` : '';
     const ava = (name, size) => `<div class="ava" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.42)}px;background:linear-gradient(135deg,#7b5cff,#c86bff)">${esc((name || '?').charAt(0).toLocaleUpperCase('tr'))}</div>`;
+    // Yeni hesap ikinci (ya da sonraki) hesapsa yükleme fiyatları artar (js/wallet.js packCost)
+    const M = A.MULTI_ACCOUNT_MARKUP || [1], nextMarkup = M[Math.min(A.Store.deviceCount(), M.length - 1)];
+    const markupNote = nextMarkup > 1 ? `<div class="notice">Bu cihazda zaten hesap var: yeni hesapta yükleme fiyatları ×${nextMarkup.toLocaleString('tr-TR')} olur.</div>` : '';
+    const backBtn = '<button class="auth-back" data-mode="welcome" aria-label="Geri">‹</button>';
     let body;
-    if (mode === 'login') {
-      body = `<h2>Hesabını seç</h2>
+    if (mode === 'welcome') {
+      // Çevrimiçi sayısı: saate göre değişen sabit bir sayı (simülasyon)
+      const online = 1200000 + (Math.floor(Date.now() / 3600000) * 7919 % 800000);
+      body = `<div class="auth-logo">amor</div>
+        <p class="auth-tag">Amor'da şu an çevrimiçi sohbet eden <b>${online.toLocaleString('tr-TR')}</b> kişi!</p>
+        <button class="auth-pill" id="guestBtn"><span>👥</span>Ziyaretçi girişi</button>
+        <button class="auth-pill" data-mode="${list.length ? 'login' : 'register'}"><span>${list.length ? '👤' : '✍️'}</span>${list.length ? 'Hesabımla giriş' : 'Hesap oluştur'}</button>
+        ${err}${markupNote}
+        <div class="auth-or"><span>Diğer giriş yöntemi</span></div>
+        <div class="auth-alt">
+          ${list.length ? '<button data-mode="login" aria-label="Hesaplarım"><em>Eski giriş yöntemi</em>👤</button>' : ''}
+          <button data-mode="register" aria-label="Yeni hesap">✍️</button>
+        </div>
+        <p class="auth-foot">Hesaplar sadece bu cihazda saklanır · coinler tamamen sanaldır</p>`;
+    } else if (mode === 'login') {
+      body = `${backBtn}<h2>Hesabını seç</h2>
         <div class="acc-list">${list.map(a => `
           <div class="acc ${auth.pick === a.id ? 'on' : ''}" data-acc="${a.id}">
             ${ava(a.user.name || a.username, 46)}
@@ -1526,9 +1589,10 @@
         ${err}
         <button class="btn ghost block" data-mode="register" style="margin-top:14px">+ Yeni hesap oluştur</button>`;
     } else {
-      body = `<h2>Hesap oluştur</h2>
+      body = `${backBtn}<h2>Hesap oluştur</h2>
         <p class="auth-sub">Hesabın bu cihazda saklanır. Her hesabın kendi karakterleri, sohbetleri ve coinleri olur.</p>
         ${!list.length && A.Store.hasLegacy() ? '<div class="notice">Bu cihazdaki mevcut sohbetlerin ve karakterlerin yeni hesabına aktarılacak 💌</div>' : ''}
+        ${markupNote}
         <form id="regForm" autocomplete="off">
           <div class="field"><label>Kullanıcı adı</label><input name="username" maxlength="20" placeholder="ör. deniz.34" autocapitalize="none" required></div>
           <div class="field"><label>Adın</label><input name="name" maxlength="20" placeholder="Kızlar sana böyle hitap edecek" required></div>
@@ -1540,10 +1604,23 @@
         </form>
         ${list.length ? '<button class="btn ghost block" data-mode="login" style="margin-top:10px">Mevcut hesaba giriş yap</button>' : ''}`;
     }
-    view.innerHTML = `<div class="auth"><div class="auth-logo">amor</div><div class="auth-card card">${body}</div></div>`;
+    // Arka plan: karakter fotoğraflarından kayan mozaik (4 sütun)
+    const shots = (A.PHOTO_SETS || []).filter(s => s.profile).map(s => A.Gen.photoUrl(s.id, s.profile)).sort(() => Math.random() - 0.5).slice(0, 20);
+    const cols = [0, 1, 2, 3].map(k => shots.filter((_, i) => i % 4 === k));
+    const mosaic = shots.length ? `<div class="auth-mosaic" aria-hidden="true">${cols.map(col =>
+      `<div>${[...col, ...col].map(u => `<img src="${esc(u)}" alt="" loading="lazy">`).join('')}</div>`).join('')}</div>` : '';
+    view.innerHTML = `<div class="auth ${mode === 'welcome' ? 'welcome' : ''}">${mosaic}<div class="auth-card ${mode === 'welcome' ? '' : 'card'}">${body}</div></div>`;
 
     const enter = () => { location.hash = '#/home'; location.reload(); };
     view.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { auth.mode = b.dataset.mode; auth.error = ''; auth.pick = null; renderAuth(); });
+    // Ziyaretçi: formsuz, rastgele kullanıcı adıyla anında hesap (ad ve yaş sonra Ben'den değişir)
+    const guest = $('#guestBtn');
+    if (guest) guest.onclick = () => {
+      let r;
+      for (let i = 0; i < 5 && !(r && r.ok); i++) r = A.Store.register({ username: 'ziyaretci' + Math.floor(1000 + Math.random() * 9000), name: 'Ziyaretçi', age: 25 });
+      if (r.ok) return enter();
+      auth.error = r.error; renderAuth();
+    };
     view.querySelectorAll('[data-acc]').forEach(el => el.onclick = e => {
       if (e.target.id === 'pinIn') return;
       const a = list.find(x => x.id === el.dataset.acc);
@@ -1588,7 +1665,8 @@
       ['#/vip', '👑', 'VIP', 0],
       ['#/game', '🎡', 'Oyun', W.spinsLeft()],
       ['#/store', '🛍️', 'Mağaza', 0],
-      ['#/rewards', '🎁', 'Ödüller', W.claimableCount()]
+      ['#/rewards', '🎁', 'Ödüller', W.claimableCount()],
+      ['#/guide', '📖', 'Kitaplık', 0]
     ];
 
     view.innerHTML = `

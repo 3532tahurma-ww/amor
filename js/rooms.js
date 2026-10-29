@@ -120,7 +120,11 @@ Amor.Rooms = (() => {
     if (roll < 0.38) {
       const m = male(pick(ids));
       if (!m) return;
-      const text = pick(A.MALE_LINES.room).replace(/\{her\}/g, c.name);
+      // arada az önce konuşan başka bir erkeğe takılır
+      const prev = [...r.msgs].reverse().find(x => x.who === 'm' && x.id !== m.id);
+      const text = prev && A.MALE_LINES.roomTease && Math.random() < 0.2
+        ? pick(A.MALE_LINES.roomTease).replace(/\{to\}/g, prev.name)
+        : pick(A.MALE_LINES.room).replace(/\{her\}/g, c.name);
       say(r, 'm', text, { name: m.name, id: m.id });
       if (r.seats.includes(m.id)) r.speaking = m.id;
       if (Math.random() < 0.6) setTimeout(() => hostReply(c, r, text, m.name), 1200 + Math.random() * 1600);
@@ -149,6 +153,10 @@ Amor.Rooms = (() => {
         const free = A.Background.st().males.filter(m => !busy.has(m.id));
         if (free.length) { const m = pick(free); r.audience.push(m.id); say(r, 'sys', `${m.name} odaya katıldı`); }
       }
+    } else if (A.ROOM_HOST_LINES && Math.random() < 0.45) {
+      // ev sahibi kendiliğinden konu açar
+      say(r, 'host', pick(A.ROOM_HOST_LINES));
+      r.speaking = 'host';
     } else {
       r.speaking = Math.random() < 0.5 ? 'host' : r.speaking;
     }
@@ -275,7 +283,7 @@ Amor.Rooms = (() => {
       pkScore(r, S().user.name || 'Sen', res.value); // PK sırasındaysa ev sahibine sayılır
       say(r, 'gift', `${S().user.name || 'Sen'} → ${c.name}: ${res.delivered.e} ${res.delivered.name}${res.qty > 1 ? ' x' + res.qty : ''}`, { coins: res.value, e: res.delivered.e });
       const thanks = A.Engine.giftReact(c, res).parts;
-      setTimeout(() => { say(r, 'host', [...thanks, ...(wl ? [wl] : [])].join(' ')); r.speaking = 'host'; draw(); }, 1300);
+      setTimeout(() => { say(r, 'host', [...thanks, ...(wl ? wl.split('|') : [])].join(' ')); r.speaking = 'host'; draw(); }, 1300);
       A.Store.save();
       draw();
     });

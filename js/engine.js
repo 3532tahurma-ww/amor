@@ -336,17 +336,30 @@ Amor.Engine = (() => {
     // Küme sistemi (js/kume.js): bir senaryoya girildiyse ya da süren senaryoda bağlantı tuttuysa cevap oradan gelir;
     // sevmediği kümeye girmez (reddeder). Ruh hali kötüyse küme yine ilerler, cevapta ruh hali cümleleri kullanılır.
     const text = messages.join(' ');
-    const kt = Amor.Kume ? Amor.Kume.turn(c, text) : null;
-    let kumeState = null;
     // Bot kuralları (js/data/bot-rules.js, bot editörü): kelimeleri mesajda sırayla geçen en özel kural.
     // Kelimeli kural cevabı verir (küme senaryosundan sonra, niyet cümlelerinden önce); kelimesiz "yedek" kurallar
     // anlaşılmayan mesajın cümlelerine katılır.
     const br = Amor.Bot && Amor.BOT_RULES ? Amor.Bot.best(Amor.BOT_RULES, text, Amor.Bot.asChar(c)) : null;
-    const botLine = x => String(x).split('||').join('|').replace(/\{sen\}/gi, S().user.name || 'sen').replace(/\{ben\}/gi, c.name.split(' ')[0]);
+    // Hediye niyeti (js/wish.js): isteğe evet / hayır, fotoğraf isteği, küsken sevişme reddi, cüretkâr açılışa cevap.
+    // Cevap verirse olay işlenmez (küsken sahne ilerlemez)
+    const wg = Amor.Wish && Amor.Wish.gate(c, text, br);
+    const kt = !wg && Amor.Kume ? Amor.Kume.turn(c, text) : null;
+    let kumeState = null;
+    const botLine = x => Amor.Intent ? Amor.Intent.line(c, x) : String(x).split('||').join('|').replace(/\{sen\}/gi, S().user.name || 'sen').replace(/\{ben\}/gi, c.name.split(' ')[0]);
+    // Niyet katmanı (js/intent.js): yazılan metinden olay / durum ("=evt", "=durum" kuralları) ya da normal kural cevabı
+    const bt = wg ? null : Amor.Intent && Amor.BOT_RULES ? Amor.Intent.turn(c, text, br)
+      : br && !br.fallback ? { line: botLine(pickRaw(br.rule.reply.filter(x => String(x).trim()))), rule: br.rule, src: 'bot kuralı' } : null;
 
     const badMood = grp === 'neg' || grp === 'sad' || grp === 'low';
     let src; // cevabın geldiği yer (editördeki simülatör gösterir)
-    if (repeated && Math.random() < 0.7) {
+    if (wg) {
+      line = wg.line;
+      src = wg.src;
+    } else if (bt && bt.event) {
+      // olay ya da soru-cevap oldu (js/intent.js): tekrar tepkisi ve küme bunu ezmez
+      line = bt.line;
+      src = bt.src;
+    } else if (repeated && Math.random() < 0.7) {
       line = pick(c, Amor.SHARED.repeat);
       src = 'tekrar eden mesaja tepki';
     } else if (kt && (!badMood || kt.refused)) {
@@ -357,9 +370,9 @@ Amor.Engine = (() => {
       if (kt.word) extra.x = kt.word; // {w}: bağlantıyı tetikleyen kelime
       line = line.replace(/\{w\}/g, '{x}');
       kumeState = kt.state;
-    } else if (br && !br.fallback) {
-      line = botLine(pickRaw(br.rule.reply.filter(x => String(x).trim())));
-      src = 'bot kuralı';
+    } else if (bt) {
+      line = bt.line;
+      src = bt.src;
     } else if (best.intent === 'react_q') {
       line = best.qLine;
       src = 'kendi sorusuna verdiğin cevaba tepki';
@@ -389,7 +402,7 @@ Amor.Engine = (() => {
     } else {
       // Konuşma kümesinin fonksiyonu: mesaj bir girdiye uyarsa o çıktının cümleleri ("iyi akşamlar" → akşam selamı)
       const fn = Amor.Kume && Amor.Kume.intentPool(best.intent, text);
-      const fbRules = best.intent === 'fallback' && br && br.fallback ? br.rule.reply.filter(x => String(x).trim()).map(botLine) : [];
+      const fbRules = best.intent === 'fallback' && br && br.fallback ? br.rule.reply.filter(x => String(x).trim() && (!Amor.Intent || Amor.Intent.OK(x))).map(botLine) : [];
       line = pick(c, fn || [...linePool(c, best.intent), ...fbRules]);
       src = fn ? 'konuşma kümesi fonksiyonu' : fbRules.includes(line) ? 'bot yedek cevabı' : 'niyet cümleleri';
       // Cümledeki fiili onaylayarak cevap ver
@@ -405,7 +418,7 @@ Amor.Engine = (() => {
 
     // Yeni öğrendiği bilgiye tepki ("İzmir mi? hep merak etmişimdir")
     // Küme cevabı verildiyse onu ezmez (hafıza yine öğrenir, sonra hatırlar)
-    if (newFacts.length && !kumeState && !(kt && kt.refused) && best.intent !== 'insult' && grp !== 'neg' && !repeated) {
+    if (newFacts.length && !wg && !kumeState && !(kt && kt.refused) && best.intent !== 'insult' && grp !== 'neg' && !repeated) {
       const fr = Amor.Memory.reaction(c, newFacts[0]);
       if (fr) {
         if (casual.includes(best.intent) || best.intent === 'answer_bad') line = rf && newFacts[0].type === 'event' ? rf + '|' + fr : fr; // olayda önce onay, sonra tepki (şehir/zevk tepkisi zaten yansıtır)
@@ -416,7 +429,8 @@ Amor.Engine = (() => {
 
     let parts = line.split('|').map(p => fill(c, p, extra)).filter(Boolean);
     const P = Amor.Kume && Amor.Kume.persona(c.archetype); // kişilik havuzu: en fazla balon
-    parts = parts.slice(0, Math.min(Math.max(mods.maxParts, newFacts.length ? 2 : 1), P && P.max ? Math.max(P.max, newFacts.length ? 2 : 1) : 9));
+    // bot cevabı (olay + durum + soru baloncukları) kırpılmaz: soru kırpılırsa "evet / hayır" görünmeyen soruya gider
+    if (!wg && (!bt || src !== bt.src)) parts = parts.slice(0, Math.min(Math.max(mods.maxParts, newFacts.length ? 2 : 1), P && P.max ? Math.max(P.max, newFacts.length ? 2 : 1) : 9));
 
     const good = grp === 'pos' || grp === 'neu';
     // Selamlaşınca: zamanı gelen olayı sor ya da eski bir bilgiyi hatırla
@@ -428,7 +442,7 @@ Amor.Engine = (() => {
     }
 
     // Yakınsa (Lv.3+) ve keyfi yerindeyse arada tatlı bir cümle ekler
-    const noAsk = ['bye', 'night', 'insult', 'tell_name', 'ask_call'].includes(best.intent) || plan.state === 'busy';
+    const noAsk = !!wg || ['bye', 'night', 'insult', 'tell_name', 'ask_call'].includes(best.intent) || plan.state === 'busy';
     let sweetened = false;
     if (good && !noAsk && !repeated && c.sweet?.length && level(c).lv >= 3 && interest >= 0.5 &&
         Math.random() < 0.12 + 0.05 * (level(c).lv - 3)) {
@@ -445,12 +459,12 @@ Amor.Engine = (() => {
     }
 
     // Hediye niyeti (js/wish.js): keyfi yerindeyse arada hediye ister
-    const wishLine = Amor.Wish && !kumeState && Amor.Wish.maybeAsk(c, { good, interest, intent: best.intent });
-    if (wishLine) parts.push(fill(c, wishLine));
+    const wishLine = Amor.Wish && !wg && !kumeState && Amor.Wish.maybeAsk(c, { good, interest, intent: best.intent });
+    if (wishLine) parts.push(...wishLine.split('|').map(p => fill(c, p)));
 
     // Meşgulse (derste, nöbette...) bir kere söyler, kısa yazar
     if (plan.state === 'busy') {
-      parts = parts.slice(0, 1);
+      if (!(bt && bt.event) && !wg) parts = parts.slice(0, 1);
       if (S().busyNote?.[c.id] !== plan.key) {
         S().busyNote = S().busyNote || {};
         S().busyNote[c.id] = plan.key;
@@ -459,9 +473,22 @@ Amor.Engine = (() => {
     }
 
     const trace = { intent: best.intent, word: best.word || null, src,
-      bot: br && (src === 'bot kuralı' || src === 'bot yedek cevabı') ? { id: br.rule.id, name: br.rule.name, when: br.rule.when, fallback: br.fallback } : null, kume: kumeState ? kumeState.name : null, refused: !!(kt && kt.refused),
+      bot: bt && src === bt.src ? { id: bt.rule.id, name: bt.rule.name, when: bt.rule.when, fallback: false }
+        : br && src === 'bot yedek cevabı' ? { id: br.rule.id, name: br.rule.name, when: br.rule.when, fallback: br.fallback } : null, kume: kumeState ? kumeState.name : null, refused: !!(kt && kt.refused),
       facts: newFacts.map(f => f.type), interest, mood: mods.label, busy: plan.state === 'busy', wish: !!wishLine, sweet: sweetened };
-    return finish(c, parts, kumeState ? { ...mods, kume: kumeState } : mods, grp, { askId, trace }, best.intent);
+    const res = finish(c, parts, kumeState ? { ...mods, kume: kumeState } : mods, grp, { askId, trace }, best.intent);
+    if (wg && wg.photo) withPhoto(res, wg.photo, wg.photoAt);
+    // hediye karşılığı sözü verilen fotoğraf (arama / oda içinde karşılandıysa burada gelir)
+    const due = Amor.Wish && Amor.Wish.takePhoto(c);
+    if (due) withPhoto(res, due);
+    return res;
+  }
+
+  // Fotoğraf balonu (js/wish.js): parts içinde { photo } nesnesi, app.js pushHer çizer
+  function withPhoto(r, url, at = r.parts.length) {
+    r.parts.splice(at, 0, { photo: url });
+    r.delays.splice(at, 0, 1800);
+    return r;
   }
 
   function finish(c, rawParts, mods, grp, flags, intent) {
@@ -490,6 +517,12 @@ Amor.Engine = (() => {
   // Karakterin kendiliğinden attığı mesaj; hafızasında sorulacak bir şey varsa onu sorar
   function opener(c) {
     const mods = Amor.Mood.modifiers(Amor.Mood.current(c).values);
+    // Cüretkâr açılış (js/wish.js): fotoğrafla "nasılım?" ya da "kaç santim?"
+    const fl = Amor.Wish && Amor.Wish.opener(c);
+    if (fl) {
+      const res = finish(c, fl.parts.map(p => fill(c, p)), mods, 'pos', {}, 'opener');
+      return fl.photo ? withPhoto(res, fl.photo, 0) : res;
+    }
     const fu = Amor.Memory.followup(c);
     const cb = fu ? null : (Math.random() < 0.4 ? Amor.Memory.callback(c) : null);
     let parts, askId = null;

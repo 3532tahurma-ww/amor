@@ -433,7 +433,7 @@ Amor.Call = (() => {
       const res = A.Engine.giftReact(k.c, r);
       A.Store.save();
       if (cur !== k) return;
-      const lines = [...res.parts, ...(wl ? [wl] : [])];
+      const lines = [...res.parts, ...(wl ? wl.split('|') : [])];
       k.queue = [];
       k.busy = true;
       (async () => { for (const p of lines) await say(k, p); if (cur === k) { k.busy = false; k.lastInput = Date.now(); } })();

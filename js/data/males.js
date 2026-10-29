@@ -54,9 +54,40 @@ Amor.MALE_LINES = {
   comment: ['çok güzelsin 😍', 'harika çıkmışsın', 'bu ne güzellik', 'mükemmel 🔥', 'gülüşüne bayıldım', 'nerde burası?', 'çok tatlı 💕', 'yine döktürmüşsün', '👏👏', 'enerjin çok güzel'],
   // Sesli oda (js/rooms.js)
   room: ['selam herkese 👋', 'selam {her}', 'sesin çok güzel', 'bir şarkı söyler misin?', 'günün nasıl geçti?', 'ben de geldim 😎', 'oda çok güzel bugün',
-    'koltuk boş mu?', 'harikasın {her}', 'nerelisin?', 'bugün çok neşelisin', 'mikrofonu açar mısın?', 'hahaha', 'aynen öyle', 'kimler burada?', 'iyi akşamlar']
+    'koltuk boş mu?', 'harikasın {her}', 'nerelisin?', 'bugün çok neşelisin', 'mikrofonu açar mısın?', 'hahaha', 'aynen öyle', 'kimler burada?', 'iyi akşamlar',
+    'en sevdiğin şarkı ne {her}?', 'bu gece uyku yok galiba 😄', 'istanbuldan selamlar', 'izmirden selam herkese', 'ankaradan bağlanıyorum 👋',
+    'işten yeni geldim, biraz kafa dağıtayım dedim', 'çay demledim, gelen alsın ☕', 'burç ne {her}?', 'ben akrebim, tehlikeliyim 😏',
+    'sesin radyo sunucusu gibi', 'bugün maç izleyen var mı?', 'film önerisi olan?', 'dizi önerin var mı {her}?', 'canım çok sıkılıyordu iyi ki girdim',
+    'odanın havası bir başka', 'herkes çok tatlı burda', 'bir türkü patlatsana {her} 🎶', 'kahkahan bulaşıcı 😂', 'aşk mı para mı?',
+    'ilk buluşmada nereye gidilir sizce?', 'kim bekar burda? 😅', 'en son ne zaman aşık oldun {her}?', 'gece yarısı sohbetleri en iyisi',
+    'bugün doğum günüm bu arada 🎂', 'yarın sınavım var ama buradayım 😅', 'yağmur yağıyor burada, siz de mi?', 'tatile nereye gidelim?',
+    'kahve mi çay mı {her}?', 'deniz mi dağ mı?', 'kedi mi köpek mi?', 'sabahçı mısın gececi mi?', 'bu odaya bağımlı oldum',
+    'herkese iyi geceler, ben biraz daha takılırım', 'mikrofonum bozuk, yazarak katılıyorum', 'arkadan müzik mi çalıyor?', 'çok güzel gülüyorsun {her}',
+    'PK olursa ben varım 💪', 'hediye yağmuru başlasın 🎁', 'en çok destek verenler bir alkış alsın 👏', 'ilk kez giriyorum, merhaba',
+    'bu kadar güzel ses yasak olmalı', 'biri fıkra anlatsın', 'yemek yediniz mi?', 'bugün pazartesi sendromu var bende', 'hafta sonu planı olan?',
+    'kimse susmasın 😄', 'oda dolsun hadi', '{her} bugün çok güzelsin', 'gülmekten karnım ağrıdı', 'haklısın valla', 'katılıyorum', 'yok artık 😂'],
+  // Odada başka bir erkeğe takılma ({to} = o erkeğin adı)
+  roomTease: ['{to} haklı bence', '{to} yine başladın 😂', '{to} abi sen çok konuştun biraz da biz', '{to} nerelisin?', '{to} ile aynı fikirdeyim',
+    '{to} kıskandım şu an 😄', '{to} bugün coşmuşsun', 'hahaha {to} efsanesin', '{to} sen de mi buradaydın?', '{to} hoş geldin kardeşim']
 };
+
+// Sesli odada ev sahibinin kendiliğinden söylediği cümleler (js/rooms.js)
+Amor.ROOM_HOST_LINES = [
+  'herkes hoş geldi 💕 kendinizi tanıtın bakalım', 'bugün kimler neredeyiz? şehrini yazan alsın', 'bir şarkı açayım mı? istek olan yazsın 🎶',
+  'sessizlik oldu, birisi bir şey anlatsın 😄', 'günün en güzel anı neydi? anlatın', 'koltuklar boş kalmasın, gelin oturun 🪑',
+  'aşk mı para mı? cevaplayın bakalım 😏', 'bu gece sabaha kadar buradayım 🌙', 'en son hangi diziyi izlediniz?', 'burcunuzu yazın, yorumlayayım ✨',
+  'ilk buluşmada nereye gidersiniz?', 'kahve mi çay mı, tartışma başlasın ☕', 'ben bugün biraz yorgunum ama sizinle iyiyim 🥰',
+  'oda çok kalabalık oldu, mutluyum 🙈', 'sizce ben kaç yaşındayım? 😄', 'birisi fıkra anlatsın, gülmek istiyorum',
+  'hediye atan herkese teşekkürler, sizi seviyorum 💗', 'bugün bir kalemiz olsa ne güzel olurdu 🏰 kim yapar o güzelliği?',
+  'bu odanın kraliçesi yapacak biri var mı? 👑', 'yatı gören var mı? 🛳️ hayalim o', 'altın roket atan olursa söz şarkı söylerim 🚀',
+  'PK olursa beni yalnız bırakmayın 🥺', 'destek verenleri asla unutmam 💕', 'kim gece kuşu? 🦉', 'ben gececiyim, siz?',
+  'tatile gitmek istiyorum, öneri? 🏝️', 'bugün çok güzel bir şey oldu, sonra anlatırım 😊', 'mikrofon sesim iyi geliyor mu?',
+  'gülüyorum ama uykum geldi 😅', 'yeni gelenler hoş geldiniz 👋', 'en sevdiğim hediye mi? elmas kolye 📿 tabii ki',
+  'biri bana serenat yapsın 🎸', 'kim kalbimi kazanacak bakalım 💘', 'yarın da açarım odayı, gelin olur mu?'
+];
 
 // Sesli oda başlıkları (js/rooms.js)
 Amor.ROOM_TITLES = ['Gece sohbeti 🌙', 'Kahve molası ☕', 'Dertleşme odası 💬', 'Şarkı istekleri 🎶', 'Tanışma odası 💕', 'Sabaha kadar 🌃',
-  'Neşeli muhabbet 😄', 'Film önerileri 🎬', 'Kafa dinleme 🎧', 'Yalnız olanlar gelsin 🥺', 'Hafta sonu keyfi 🎉', 'Burç sohbeti ✨'];
+  'Neşeli muhabbet 😄', 'Film önerileri 🎬', 'Kafa dinleme 🎧', 'Yalnız olanlar gelsin 🥺', 'Hafta sonu keyfi 🎉', 'Burç sohbeti ✨',
+  'Aşk itirafları 💌', 'Gece kuşları 🦉', 'Türkü gecesi 🪕', 'Doğruluk mu cesaret mi? 🎲', 'İlk buluşma hikayeleri 🌹', 'Kraliçenin sarayı 👑',
+  'Dizi bağımlıları 📺', 'Yağmurlu akşam ☔', 'PK gecesi ⚔️', 'Şehir şehir selam 🗺️', 'Fıkra saati 😂', 'Kalbi kırıklar kulübü 💔'];

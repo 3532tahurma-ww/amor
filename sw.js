@@ -1,17 +1,17 @@
-/*
+﻿/*
  * Amor - Service worker (çevrimdışı çalışma)
  * -------------------------------------------
  * Uygulama dosyaları kurulumda önbelleğe alınır; açılışta önbellekten gelir,
  * arka planda güncellenir (stale-while-revalidate). Fotoğraflar ilk görüldüklerinde saklanır.
  * Yeni sürüm yayınlarken VERSION'ı artır, eski önbellek silinir.
  */
-const VERSION = 'amor-v83';
+const VERSION = 'amor-v94';
 const CORE = [
   './', './index.html', './manifest.json', './css/style.css',
   './js/store.js', './js/data/photos.js', './js/data/pools.js', './js/data/archetypes.js', './js/data/intents.js', './js/data/males.js', './js/kume.js',
   './js/data/shop.js', './js/data/questions.js', './js/data/memory-data.js', './js/data/reflect.js','./js/data/custom-characters.js',
-  './js/data/custom-dialog.js', './js/data/bot-rules.js', './js/bot.js', './js/notify.js', './js/schedule.js', './js/mood.js',
-  './js/memory.js', './js/interest.js', './js/nlu.js', './js/reflect.js','./js/engine.js', './js/generator.js', './js/wallet.js', './js/wish.js', './js/shop.js', './js/games.js', './js/background.js', './js/broadcast.js', './js/feed.js', './js/rooms.js', './js/agency.js', './js/match.js', './js/app.js', './js/call.js',
+  './js/data/custom-dialog.js', './js/data/bot-rules.js', './js/bot.js', './js/data/intent-map.js', './js/data/char-traits.js', './js/data/carmen-bot.js', './js/params.js', './js/intent.js', './js/notify.js', './js/schedule.js', './js/mood.js',
+  './js/memory.js', './js/interest.js', './js/nlu.js', './js/reflect.js','./js/engine.js', './js/generator.js', './js/wallet.js', './js/wish.js', './js/shop.js', './js/games.js', './js/background.js', './js/broadcast.js', './js/feed.js', './js/rooms.js', './js/agency.js', './js/match.js', './js/guide.js', './js/app.js', './js/call.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'
 ];
 const IMG_CACHE = 'amor-img';

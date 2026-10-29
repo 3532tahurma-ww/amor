@@ -4,13 +4,14 @@
  *
  * Hesaplar: "amor:accounts" = { list: [{ id, username, pin, created }], current }
  * Her hesabın verisi ayrı anahtarda: "amor:v2:<id>". Hesap yoksa (ilk açılış) state boş durur
- * ve uygulama hesap oluşturma ekranını gösterir. Hesaplardan önceki eski veri ("amor:v2")
+ * ve uygulama hesap oluşturma ekranını gösterir. "amor:device" = { made }: cihazda açılan hesap sayısı (rank; çoklu hesapta
+ * yükleme fiyatları artar, js/wallet.js packCost). Hesaplardan önceki eski veri ("amor:v2")
  * ilk oluşturulan hesaba aktarılır.
  */
 window.Amor = window.Amor || {};
 
 Amor.Store = (() => {
-  const LEGACY = 'amor:v2', ACC = 'amor:accounts';
+  const LEGACY = 'amor:v2', ACC = 'amor:accounts', DEV = 'amor:device';
   const defaults = () => ({
     user: { name: '', age: '', city: '' },
     characters: [], // oluşturulan karakterlerin kimlikleri (generator.js)
@@ -59,7 +60,11 @@ Amor.Store = (() => {
 
   const accounts = () => accs.list.map(a => ({ id: a.id, username: a.username, created: a.created, hasPin: !!a.pin, user: (read(LEGACY + ':' + a.id) || {}).user || {} }));
   const account = () => accs.list.find(a => a.id === accs.current) || null;
+  // Bu hesap cihazın kaçıncı hesabı (0 = ilk); eski hesaplarda oluşturma sırası
+  const accountRank = () => { const a = account(); return !a ? 0 : a.rank != null ? a.rank : accs.list.indexOf(a); };
   const hasLegacy = () => !!read(LEGACY);
+  // Cihazda bugüne kadar açılan hesap sayısı (silinenler dahil): yeni hesabın rank'i bu olur
+  const deviceCount = () => Math.max((read(DEV) || { made: 0 }).made, accs.list.length);
 
   // { username, name, age, city, pin } -> { ok, error }
   function register(f) {
@@ -71,7 +76,10 @@ Amor.Store = (() => {
     if (!Number.isInteger(age) || age < 18 || age > 99) return { ok: false, error: 'Yaş 18-99 arasında olmalı.' };
     if (f.pin && !/^\d{4}$/.test(f.pin)) return { ok: false, error: 'PIN 4 haneli olmalı (ya da boş bırak).' };
     const id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    accs.list.push({ id, username, pin: f.pin ? hash(f.pin) : null, created: Date.now() });
+    // Cihazda kaçıncı hesap (silinen hesaplar da sayılır; sayaç hiç azalmaz)
+    const dev = read(DEV) || { made: accs.list.length };
+    accs.list.push({ id, username, pin: f.pin ? hash(f.pin) : null, created: Date.now(), rank: Math.max(dev.made, accs.list.length) });
+    write(DEV, { made: Math.max(dev.made, accs.list.length - 1) + 1 });
     accs.current = id;
     write(ACC, accs);
     // Hesaplardan önceki veri ilk hesaba geçer
@@ -121,6 +129,6 @@ Amor.Store = (() => {
     get state() { return state; },
     save,
     reset,
-    accounts, account, hasLegacy, register, login, logout, setPin, removeAccount
+    accounts, account, accountRank, deviceCount, hasLegacy, register, login, logout, setPin, removeAccount
   };
 })();

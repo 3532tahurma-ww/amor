@@ -15,7 +15,8 @@
  *   @selam     → kelime grubundaki herhangi bir kelime (grupta da yap- ve +fiil kullanılabilir)
  * when sırası önemlidir: "X, Y" ile "Y, X" farklı kurallardır. when boşsa kural "yedek cevap"tır.
  * reply: seçeneklerden biri rastgele; "||" ayrı baloncuk; {sen} kullanıcının, {ben} karakterin adı.
- * traits: karakterde HEPSİ olmalı. chars: sadece bu adlar (tam ad ya da ilk ad).
+ * traits: karakterde HEPSİ olmalı; bir öğede "|" ile alternatifler (ör. "Utangaç|Soğuk" = biri yeter).
+ * chars: sadece bu adlar (tam ad ya da ilk ad).
  * Eşleşenler arasında en özel kural kazanır: daha çok kelime > kişilik şartı > karakter şartı. Eşitlikte rastgele.
  */
 window.Amor = window.Amor || {};
@@ -77,7 +78,7 @@ Amor.Bot = (() => {
 
   function fits(rule, ch) {
     const traits = (rule.traits || []).filter(Boolean);
-    if (traits.length && !traits.every(t => (ch.traits || []).some(x => lower(x) === lower(t)))) return false;
+    if (traits.length && !traits.every(t => String(t).split('|').some(a => (ch.traits || []).some(x => lower(x) === lower(a))))) return false;
     const names = (rule.chars || []).map(lower).filter(Boolean);
     if (names.length) {
       const full = lower(ch.name), first = full.split(' ')[0];
@@ -138,8 +139,8 @@ Amor.Bot = (() => {
   }
 
   /* ---------- Motordaki kullanım (js/engine.js: kurallar respond'da, ekler finish'te) ----------
-   * c: karakter (name, archLabel) · vars: { sen, ben } */
-  const asChar = c => ({ name: c.name, traits: [c.archLabel].filter(Boolean) });
+   * c: karakter (name, archLabel; gizli özellikler js/params.js) · vars: { sen, ben } */
+  const asChar = c => ({ name: c.name, traits: Amor.Params && c.id ? Amor.Params.traits(c) : [c.archLabel].filter(Boolean) });
   const typeMs = p => Math.round(Math.max(700, Math.min(3500, String(p).length * 55)));
 
   // 🪄 Otomatik ekler: başına/sonuna ek ilk/son baloncuğa, önce/sonra ekleri ayrı baloncuk; olasılık burada zarla bakılır.

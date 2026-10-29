@@ -43,6 +43,11 @@
 <script src="../js/wallet.js"></script>
 <script src="../js/wish.js"></script>
 <script src="../js/bot.js"></script>
+<script src="../js/data/intent-map.js"></script>
+<script src="../js/data/char-traits.js"></script>
+<script src="../js/data/carmen-bot.js"></script>
+<script src="../js/params.js"></script>
+<script src="../js/intent.js"></script>
 <script>
 window.Sim = (() => {
   const A = Amor, S = () => A.Store.state;
@@ -107,7 +112,7 @@ window.Sim = (() => {
     const chat = S().chats[c.id] = S().chats[c.id] || [];
     texts.forEach(t => chat.push({ from: 'me', text: t, ts: Date.now() }));
     const before = info(), r = A.Engine.respond(c, texts);
-    r.parts.forEach(p => chat.push({ from: 'her', text: p, ts: Date.now() }));
+    r.parts.forEach(p => chat.push({ from: 'her', text: p && p.photo ? '📷 [fotoğraf]' : p, ts: Date.now() }));
     A.Store.save();
     return { parts: r.parts, delays: r.delays, trace: r.trace || (r.leave ? { src: 'sosyal pili bitti: sohbetten çıktı' } : {}), addons: r.addons || [], before, info: info() };
   }

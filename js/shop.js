@@ -106,9 +106,10 @@ window.Amor = window.Amor || {};
               ${p.bonus ? `<em>+${fmt(p.bonus)}</em>` : ''}
               <b>${fmt(p.coins)}</b>
               <span class="big-coin sm">♥</span>
-              <span class="price">${tl(p.price * 100)}</span>
+              <span class="price">${tl(W().packCost(p))}</span>
             </button>`).join('')}
         </div>
+        ${W().markup() > 1 ? `<div class="notice">Bu cihazda birden çok hesap fark edildi: bu hesapta yükleme fiyatları ×${W().markup().toLocaleString('tr-TR')}</div>` : ''}
         <button class="purse" id="purse" type="button" aria-label="Cüzdanı aç">
           <span class="purse-flap"></span>
           <small>👛 Cüzdanım</small>
@@ -119,7 +120,7 @@ window.Amor = window.Amor || {};
       </div>`;
 
     const markPacks = () => view().querySelectorAll('[data-pack]').forEach(b =>
-      b.classList.toggle('short', W().purse() < Math.round(A.RECHARGE_PACKS[+b.dataset.pack].price * 100)));
+      b.classList.toggle('short', W().purse() < W().packCost(A.RECHARGE_PACKS[+b.dataset.pack])));
     markPacks();
     $('#purse').onclick = () => walletSheet(() => { const v = $('#purseVal'); if (v) v.textContent = tl(W().purse()); markPacks(); });
     view().querySelectorAll('[data-pack]').forEach(b => b.onclick = () => buySheet(A.RECHARGE_PACKS[+b.dataset.pack]));
@@ -205,7 +206,7 @@ window.Amor = window.Amor || {};
 
   function buySheet(p) {
     const total = p.coins + (p.bonus || 0);
-    const cost = Math.round(p.price * 100), have = W().purse(), ok = have >= cost;
+    const cost = W().packCost(p), have = W().purse(), ok = have >= cost;
     const sh = sheet(`
       <div class="sheet-grip"></div>
       <h3>Cüzdandan öde</h3>
@@ -563,7 +564,7 @@ window.Amor = window.Amor || {};
         const bag = W().bag();
         const list = giftTab === 'canta'
           ? bag.map(b => ({ ...b.gift, owned: b.qty }))
-          : A.GIFTS.filter(g => g.tab === giftTab);
+          : A.GIFTS.filter(g => g.tab === giftTab).sort((a, b) => !!a.vip - !!b.vip || a.price - b.price);
         if (sel && !list.find(g => g.id === sel)) sel = null;
 
         $('#gp', sh.el).innerHTML = `

@@ -46,7 +46,9 @@ Amor.Wallet = (() => {
   const save = () => Amor.Store.save();
 
   /* ---------- Coin ---------- */
-  const coins = () => st().wallet.coins;
+  // Test modu (test-modu.bat → test.html): bu sekmede coin sınırsız, harcama düşülmez
+  const FREE = (() => { try { return sessionStorage.getItem('amor:test') === '1'; } catch { return false; } })();
+  const coins = () => FREE ? Infinity : st().wallet.coins;
 
   function log(amount, reason) {
     const w = st().wallet;
@@ -65,6 +67,7 @@ Amor.Wallet = (() => {
 
   function spend(amount, reason) {
     const w = st().wallet;
+    if (FREE) return true;
     if (w.coins < amount) return false;
     w.coins -= amount;
     w.spent += amount;
@@ -166,8 +169,14 @@ Amor.Wallet = (() => {
     save();
     return { ok: true, amount: info.rate, info: tapInfo() };
   }
+  // Paketin kuruş fiyatı: ikinci ve sonraki hesaplarda pahalanır (Store.accountRank, MULTI_ACCOUNT_MARKUP)
+  function markup() {
+    const M = Amor.MULTI_ACCOUNT_MARKUP || [1];
+    return M[Math.min(Amor.Store.accountRank(), M.length - 1)];
+  }
+  const packCost = pack => Math.round(pack.price * markup() * 100);
   function buyPack(pack) {
-    const cost = Math.round(pack.price * 100);
+    const cost = packCost(pack);
     if (purse() < cost) return false;
     st().wallet.purse -= cost;
     st().wallet.purseSpent += cost;
@@ -428,8 +437,8 @@ Amor.Wallet = (() => {
   }
 
   return {
-    st, today, coins, add, spend, wealth, vip, hasPerk,
-    recharge, purse, purseSpent, tapPurse, tapInfo, buyPack, upgradeInfo, buyUpgrade, TAP_UPGRADES, monthlyTiers, claimTier, cards, useCard,
+    st, today, coins, add, FREE, spend, wealth, vip, hasPerk,
+    recharge, purse, purseSpent, tapPurse, tapInfo, buyPack, packCost, markup, upgradeInfo, buyUpgrade, TAP_UPGRADES, monthlyTiers, claimTier, cards, useCard,
     checkinState, doCheckin, track, taskProgress, claimTask, achievementProgress, claimAchievement, claimableCount,
     vipBonusAvailable, claimVipBonus, spinsLeft, spin,
     addGift, bag, owns, expiresIn, buyItem, equip, activeFrame, activeBg, activeBubble, chatTheme,
